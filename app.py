@@ -10,110 +10,134 @@ D7_NUMBER = "+264817491383"
 def log(m):
     print(m, flush=True)
 
-def get_reply(msg):
+WELCOME_MENU = """👉Welcome to Kahlel Group! 👋
+
+1️⃣ 🤖 Kahlel AI - Robotics & Automation
+2️⃣ 🎬 Kahlel Flix - Outdoor Cinema  
+3️⃣ ✈️ Afri-Ka Travels - Travel & Tours
+4️⃣ 📺 Vivid Graphix - LED Display & Signage
+
+Reply 1-4 or type name"""
+
+MENUS = {
+    "1": """🤖 *Kahlel AI - Robotics & Automation*
+We build:
+• WhatsApp AI Bots (like this one!)
+• GoGirl Transfers automation
+• Custom business AI assistants
+
+Cost: From N$1500 setup
+Type *Kahlel AI* to learn more or *Menu* to go back""",
+    "2": """🎬 *Kahlel Flix - Outdoor Cinema*
+• Inflatable screen + projector + sound
+• Perfect for birthdays, weddings, schools
+• Packages: N$1500 - N$5000
+
+We bring cinema to YOU!
+Type *Flix* to book or *Menu* to go back""",
+    "3": """✈️ *Afri-Ka Travels & GoGirl Transfers*
+• Airport transfers: N$350
+• City rides: N$150  
+• Luxury tours: N$800/day
+• Female drivers available
+
+Type your pickup location or *Menu* to go back""",
+    "4": """📺 *Vivid Graphix - LED & Signage*
+• LED screens for events
+• Shop signs, branding
+• Digital displays
+
+Get a quote now!
+Type *Vivid* for quote or *Menu* to go back"""
+}
+
+def get_ai_reply(msg):
     try:
         client = Groq(api_key=GROQ_API_KEY)
         c = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role":"system","content":"You are Kahlel Group Assistant for GoGirl Transfers in Windhoek. Services: Airport N$350, City N$150, Luxury N$800/day. Be short, friendly, helpful."},
+                {"role":"system","content":f"You are Kahlel Group Assistant. Menu: {WELCOME_MENU}. Services details: {MENUS}. Always be short, friendly, Namibian vibe. If user asks for service, give details. If confused, show Menu."},
                 {"role":"user","content":msg}
             ],
-            max_tokens=250
+            max_tokens=300
         )
         return c.choices[0].message.content
     except Exception as e:
         log(f"Groq error {e}")
-        return "Dumelang Leon! I can help with GoGirl airport transfers N$350, city rides N$150. What do you need?"
+        return None
 
 def send_whatsapp(to, text):
     try:
-        # Ensure + prefix
-        to_clean = str(to).replace(" ","").replace("-","")
+        to_clean = str(to).replace(" ","")
         if not to_clean.startswith("+"):
             to_clean = "+" + to_clean
         url = "https://api.d7networks.com/whatsapp/v2/send"
         headers = {"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type": "application/json"}
-        payload = {
-            "messages": [{
-                "originator": D7_NUMBER,
-                "content": {"message_type": "TEXT", "text": {"body": text}},
-                "recipients": [{"recipient": to_clean, "recipient_type": "individual"}]
-            }]
-        }
+        payload = {"messages": [{"originator": D7_NUMBER,"content": {"message_type":"TEXT","text":{"body":text}},"recipients": [{"recipient": to_clean,"recipient_type":"individual"}]}]}
         r = requests.post(url, headers=headers, json=payload, timeout=15)
-        log(f"SEND to {to_clean} => {r.status_code} {r.text[:800]}")
-        return r.status_code in [200,201]
+        log(f"SEND {r.status_code} {r.text[:500]}")
+        return True
     except Exception as e:
         log(f"SEND ERR {e}")
         return False
 
 @app.route("/")
 def home():
-    return "Kahlel Bot LIVE FINAL"
+    return "Kahlel Bot with Menu LIVE"
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method == "GET":
+    if request.method=="GET":
         return "Webhook Ready",200
     try:
         raw = request.get_data(as_text=True)
         log(f"RAW: {raw[:2000]}")
         data = json.loads(raw) if raw else {}
-        
-        sender = ""
-        msg = ""
-        
-        # REAL D7 FORMAT (from your log)
-        # data.event_content.message.originator = sender
-        # data.event_content.message.text.body = msg
-        try:
-            if "event_content" in data and "message" in data["event_content"]:
-                m = data["event_content"]["message"]
-                sender = m.get("originator") or ""
-                txt = m.get("text") or {}
-                if isinstance(txt, dict):
-                    msg = txt.get("body") or ""
-                else:
-                    msg = str(txt)
-                log(f"Found in event_content.message: sender={sender} msg={msg}")
-        except Exception as e:
-            log(f"Parse event_content error {e}")
-
-        # Fallback for other formats
-        if not sender and "messages" in data:
-            try:
-                m = data["messages"][0]
-                sender = m.get("from") or ""
-                msg = m.get("text") or ""
-            except:
-                pass
-
+        sender=""; msg=""
+        if "event_content" in data and "message" in data["event_content"]:
+            m = data["event_content"]["message"]
+            sender = m.get("originator") or ""
+            txt = m.get("text") or {}
+            msg = txt.get("body") if isinstance(txt, dict) else str(txt)
         if not sender or not msg:
-            log(f"Missing data sender={sender} msg={msg}")
-            return jsonify({"status":"ignored no data"}),200
+            return jsonify({"status":"ignored"}),200
+        sender = "+" + str(sender).strip().lstrip("+")
+        text = str(msg).strip().lower()
+        log(f"From {sender}: {msg} -> lower: {text}")
 
-        sender = str(sender).strip()
-        if not sender.startswith("+"):
-            sender = "+" + sender
-        
-        log(f"PROCESSING {sender}: {msg}")
-        reply = get_reply(str(msg))
-        log(f"REPLY: {reply}")
+        reply = ""
+        # MENU LOGIC
+        if text in ["hello","hi","hey","dumelang","menu","start","0","welcome"] or len(text)<2:
+            reply = WELCOME_MENU
+        elif text in ["1","1️⃣","kahlel ai","ai","robotics","automation","bot"]:
+            reply = MENUS["1"]
+        elif text in ["2","2️⃣","kahlel flix","flix","cinema","outdoor","movie"]:
+            reply = MENUS["2"]
+        elif text in ["3","3️⃣","afrika","afri-ka","travels","travel","gogirl","transfer","ride"]:
+            reply = MENUS["3"]
+        elif text in ["4","4️⃣","vivid","vivid graphix","led","signage","display"]:
+            reply = MENUS["4"]
+        else:
+            # Try Groq AI, fallback to menu
+            ai = get_ai_reply(msg)
+            if ai:
+                reply = ai
+            else:
+                # If user typed 1-4 in sentence
+                if "1" in text: reply = MENUS["1"]
+                elif "2" in text: reply = MENUS["2"]
+                elif "3" in text: reply = MENUS["3"]
+                elif "4" in text: reply = MENUS["4"]
+                else: reply = WELCOME_MENU + "\n\nI didn't understand - Reply 1-4 please"
+
+        log(f"REPLY: {reply[:200]}")
         send_whatsapp(sender, reply)
         return jsonify({"status":"sent"}),200
     except Exception as e:
-        log(f"WEBHOOK EXCEPTION {e}")
+        log(f"EXC {e}")
         import traceback; traceback.print_exc()
         return jsonify({"ok":True}),200
-
-@app.route("/last")
-def last():
-    try:
-        with open("/tmp/last.json","r") as f:
-            return f.read(),200,{'Content-Type':'application/json'}
-    except:
-        return "No webhook yet",200
 
 @app.route("/health")
 def health():
