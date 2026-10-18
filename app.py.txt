@@ -1,0 +1,238 @@
+import os
+import requests
+from flask import Flask, request, jsonify
+from groq import Groq
+from datetime import datetime, timedelta
+from collections import defaultdict, Counter
+
+app = Flask(__name__)
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+D7_API_TOKEN = os.getenv("D7_API_TOKEN")
+D7_WHATSAPP_NUMBER = "+264817491383"
+ADMIN_PIN = os.getenv("ADMIN_PIN", "007")  # Your admin pin
+ADMIN_NUMBERS = ["+264817491383", "+26481XXXXXXX"]  # Add your personal number here
+
+user_sessions = {}
+stats = {
+    "total_chats": 0,
+    "by_business": Counter(),
+    "by_day": defaultdict(int),
+    "recent_leads": []  # last 20 leads
+}
+
+BUSINESSES = {
+    "1": {
+        "name": "Kahlel AI",
+        "icon": "🤖",
+        "code": "AI",
+        "desc": "Robotics & Automation",
+        "brain": "You are Kahlel AI Assistant. Professional, friendly. Business: Robotics & Automation, STEM Education, Arduino, Raspberry Pi, Industrial Automation for farms/mines, School Robotics Clubs. Location Windhoek. Goal: Book consultation/demo. Ask about their needs.",
+        "keywords": ["ai", "robot", "automation", "arduino", "stem", "school"]
+    },
+    "2": {
+        "name": "Kahlel Flix",
+        "icon": "🎬",
+        "code": "FLIX",
+        "desc": "Outdoor Cinema Events",
+        "brain": "You are Kahlel Flix Assistant. Friendly, short, emojis. Outdoor Cinema DTS Olympia Windhoek. Events: Oct 30 Is Live Enough N$55, Oct 31 DOUBLE FEATURE Lion King+Notebook DTS Olympia. Pricing: Single N$55, Double N$99, Silver Double N$55+2popcorn+blanket, VIP Double N$27.50+2popcorn+2drinks+beanbag+VIP+blanket saves N$71.50. Upsell VIP. Goal: booking.",
+        "keywords": ["flix", "cinema", "movie", "film", "outdoor", "dts"]
+    },
+    "3": {
+        "name": "Afri-Ka Travels",
+        "icon": "✈️",
+        "code": "TRAVEL",
+        "desc": "Travel & Tours Namibia",
+        "brain": "You are Afri-Ka Travels Assistant. Warm, helpful, travel expert. Business: Travel agency - domestic tours, Sossusvlei, Etosha, Swakopmund, visa assistance, flight bookings, car rentals. Location Windhoek, Namibia. Services: Tour packages, hotel bookings, adventure tours. Goal: Get travel dates, destination, people, budget. Offer to create itinerary.",
+        "keywords": ["travel", "afri-ka", "tour", "trip", "flight", "visa", "safari", "etosha", "sossusvlei"]
+    },
+    "4": {
+        "name": "Vivid Graphix",
+        "icon": "📺",
+        "code": "VIVID",
+        "desc": "LED Display & Signage",
+        "brain": "You are Vivid Graphix Assistant. Creative, professional. Business: LED Display screens, Digital Signage, Billboards, Shop signs, 3D signage, LED rentals for events. Services: Indoor/outdoor LED, installation, content management. Location Windhoek. Clients: Shops, churches, schools, events. Goal: Get size, indoor/outdoor, rental or purchase, location. Offer free quote.",
+        "keywords": ["vivid", "led", "display", "signage", "billboard", "screen", "sign", "graphix"]
+    }
+}
+
+client = Groq(api_key=GROQ_API_KEY)
+
+def ask_ai(user_message, business_code):
+    brain = next((b["brain"] for b in BUSINESSES.values() if b["code"]==business_code), "You are helpful.")
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "system", "content": brain}, {"role": "user", "content": user_message}],
+            temperature=0.7, max_tokens=350
+        )
+        return completion.choices[0].message.content
+    except:
+        biz_name = next((b["name"] for b in BUSINESSES.values() if b["code"]==business_code), "Kahlel")
+        return f"Hello from {biz_name}! 👋 How can I help?"
+
+def send_whatsapp_d7(to_number, message_text):
+    url = "https://api.d7networks.com/whatsapp/v2/send"
+    headers = {"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type": "application/json"}
+    payload = {"to": to_number, "from": D7_WHATSAPP_NUMBER, "type": "text", "content": {"text": message_text}}
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=15)
+        if r.status_code == 404:
+            url2 = "https://api.d7networks.com/whatsapp/v1/messages"
+            payload2 = {"originator": D7_WHATSAPP_NUMBER, "recipient": to_number, "content": message_text, "message_type": "text"}
+            r = requests.post(url2, json=payload2, headers=headers, timeout=15)
+        return r.ok
+    except: return False
+
+def get_welcome_message():
+    msg = "Welcome to *Kahlel Group*! 👋🇳🇦\nI am M, assistant to 007.\n\nI can assist with:\n"
+    for key, biz in BUSINESSES.items():
+        msg += f"{key}️⃣ {biz['icon']} {biz['name']} - {biz['desc']}\n"
+    msg += "\nReply with number (1-4) or name.\n_Type MENU anytime to switch_"
+    return msg
+
+def detect_intent(text):
+    text_lower = text.lower().strip()
+    if text_lower in BUSINESSES: return BUSINESSES[text_lower]["code"]
+    if text_lower and text_lower[0] in BUSINESSES and len(text_lower)<=2: return BUSINESSES[text_lower[0]]["code"]
+    for biz in BUSINESSES.values():
+        for kw in biz["keywords"]:
+            if kw in text_lower: return biz["code"]
+    return None
+
+def get_admin_stats():
+    today = datetime.now().strftime("%Y-%m-%d")
+    total = stats["total_chats"]
+    by_biz = stats["by_business"]
+    recent = stats["recent_leads"][-10:]
+    msg = f"📊 *KAHLEL GROUP ADMIN DASHBOARD*\nDate: {today}\n\n"
+    msg += f"Total Chats Today: {stats['by_day'][today]}\nTotal All Time: {total}\n\n"
+    msg += "*By Business:*\n"
+    for code, count in by_biz.most_common():
+        biz_name = next((b["name"] for b in BUSINESSES.values() if b["code"]==code), code)
+        msg += f"{biz_name}: {count}\n"
+    if not by_biz:
+        msg += "No chats yet today\n"
+    msg += f"\n*Recent Leads (last 10):*\n"
+    for lead in reversed(recent):
+        msg += f"{lead['time']} - {lead['number']} -> {lead['business']}: {lead['msg'][:30]}...\n"
+    msg += f"\nActive Sessions: {len(user_sessions)}\n\nType ADMIN RESET to clear stats"
+    return msg
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Kahlel Group Empire Bot LIVE! 🤖🎬✈️📺 Use /admin for dashboard"
+
+@app.route("/admin", methods=["GET"])
+def admin_web():
+    today = datetime.now().strftime("%Y-%m-%d")
+    html = f"""
+    <html><head><title>Kahlel Admin</title><style>
+    body{{font-family:Arial;padding:20px;background:#0f172a;color:white}}
+    .card{{background:#1e293b;padding:20px;border-radius:12px;margin:10px 0}}
+    h1{{color:#38bdf8}}
+    </style></head><body>
+    <h1>📊 Kahlel Group Admin Dashboard</h1>
+    <div class=card><h3>Today: {today}</h3><p>Total Chats Today: {stats['by_day'][today]}<br>Total All Time: {stats['total_chats']}<br>Active Sessions: {len(user_sessions)}</p></div>
+    <div class=card><h3>By Business</h3><p>{'<br>'.join([f'{next((b[\"name\"] for b in BUSINESSES.values() if b[\"code\"]==code), code)}: {count}' for code,count in stats['by_business'].most_common()]) or 'No data yet'}</p></div>
+    <div class=card><h3>Recent Leads (10)</h3><p>{'<br>'.join([f"{l['time']} - {l['number']} -> {l['business']}: {l['msg'][:50]}" for l in reversed(stats['recent_leads'][-10:])]) or 'None'}</p></div>
+    <div class=card><small>Refresh page to update. Secret commands in WhatsApp: ADMIN STATS, ADMIN RESET, ADMIN LEADS</small></div>
+    </body></html>
+    """
+    return html
+
+@app.route("/webhook", methods=["GET", "POST"])
+def webhook():
+    if request.method == "GET":
+        return request.args.get("hub.challenge", "Kahlel Group Active"), 200
+    try:
+        data = request.get_json(force=True)
+        from_number = None
+        user_text = None
+        if isinstance(data, dict):
+            from_number = data.get("sender") or data.get("from") or data.get("originator") or data.get("waId")
+            user_text = data.get("text") or data.get("body") or data.get("content") or data.get("message")
+            if isinstance(user_text, dict):
+                user_text = user_text.get("text") or user_text.get("body")
+            if not user_text and "message" in data:
+                user_text = data["message"].get("text") if isinstance(data["message"], dict) else data["message"]
+        if not from_number or not user_text: return jsonify({"status":"ignored"}),200
+        from_number = str(from_number).replace(" ","").replace("-","")
+        if not from_number.startswith("+"):
+            if from_number.startswith("264"): from_number = "+"+from_number
+        user_text = str(user_text).strip()
+        user_text_lower = user_text.lower()
+        now = datetime.now()
+
+        # === ADMIN COMMANDS ===
+        if user_text_lower.startswith("admin"):
+            # Check if admin (simple check - you can add your personal number to ADMIN_NUMBERS)
+            is_admin = True  # For now allow anyone with PIN, change to check number later
+            if ADMIN_PIN in user_text or is_admin:
+                if "stats" in user_text_lower or user_text_lower=="admin":
+                    send_whatsapp_d7(from_number, get_admin_stats())
+                    return jsonify({"status":"admin stats sent"}),200
+                elif "reset" in user_text_lower:
+                    stats["total_chats"]=0
+                    stats["by_business"].clear()
+                    stats["by_day"].clear()
+                    stats["recent_leads"].clear()
+                    send_whatsapp_d7(from_number, "✅ Stats reset! Dashboard cleared.")
+                    return jsonify({"status":"reset"}),200
+                elif "leads" in user_text_lower:
+                    leads = stats["recent_leads"][-20:]
+                    msg = "📋 *Last 20 Leads:*\n" + "\n".join([f"{l['number']} -> {l['business']}" for l in leads]) or "No leads"
+                    send_whatsapp_d7(from_number, msg)
+                    return jsonify({"status":"leads sent"}),200
+            else:
+                send_whatsapp_d7(from_number, "🔒 Admin access denied. Need PIN.")
+                return jsonify({"status":"admin denied"}),200
+
+        if from_number in user_sessions and now - user_sessions[from_number]['time'] > timedelta(hours=24):
+            del user_sessions[from_number]
+
+        if user_text_lower in ["menu","start","hi","hello","back","change","0","group"]:
+            if from_number in user_sessions: del user_sessions[from_number]
+            send_whatsapp_d7(from_number, get_welcome_message())
+            return jsonify({"status":"menu sent"}),200
+
+        if from_number not in user_sessions:
+            intent_code = detect_intent(user_text)
+            if intent_code:
+                user_sessions[from_number] = {'intent': intent_code, 'time': now}
+                stats["total_chats"]+=1
+                stats["by_business"][intent_code]+=1
+                stats["by_day"][now.strftime("%Y-%m-%d")]+=1
+                stats["recent_leads"].append({"number":from_number,"business":intent_code,"msg":user_text,"time":now.strftime("%H:%M")})
+                if len(stats["recent_leads"])>50: stats["recent_leads"].pop(0)
+                biz_name = next((b['name'] for b in BUSINESSES.values() if b['code']==intent_code), "Kahlel")
+                icon = next((b['icon'] for b in BUSINESSES.values() if b['code']==intent_code), "")
+                reply = f"Great! Switched to *{biz_name}* {icon}\n\n" + ask_ai(user_text, intent_code)
+                send_whatsapp_d7(from_number, reply)
+                return jsonify({"status":f"routed to {intent_code}"}),200
+            else:
+                send_whatsapp_d7(from_number, get_welcome_message())
+                return jsonify({"status":"welcome"}),200
+        else:
+            intent_code = user_sessions[from_number]['intent']
+            user_sessions[from_number]['time']=now
+            new_intent = detect_intent(user_text)
+            if new_intent and new_intent!=intent_code and len(user_text)<15:
+                user_sessions[from_number]['intent']=new_intent
+                intent_code=new_intent
+                stats["by_business"][intent_code]+=1
+                biz_name = next((b['name'] for b in BUSINESSES.values() if b['code']==intent_code), "Kahlel")
+                reply = f"Switched to *{biz_name}*! 🔄\n\n" + ask_ai(user_text, intent_code)
+                send_whatsapp_d7(from_number, reply)
+                return jsonify({"status":f"switched to {intent_code}"}),200
+            ai_reply = ask_ai(user_text, intent_code)
+            send_whatsapp_d7(from_number, ai_reply)
+            return jsonify({"status":"sent"}),200
+    except Exception as e:
+        print(f"Error: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({"error": str(e)}),200
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
