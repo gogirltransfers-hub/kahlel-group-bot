@@ -128,33 +128,38 @@ def send_image(to, image_url, caption):
     to_clean="+"+str(to).strip().lstrip("+")
     url="https://api.d7networks.com/whatsapp/v2/send"
     headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
-    
-    attempts = [
-        # Format 1
-        {"message_type":"IMAGE","image":{"url": image_url, "caption": caption[:900]}},
-        # Format 2 - link not url
-        {"message_type":"IMAGE","image":{"link": image_url, "caption": caption[:900]}},
-        # Format 3 - media
-        {"message_type":"MEDIA","media":{"type":"image","url": image_url, "caption": caption[:900]}}
-    ]
-    
-    for payload_content in attempts:
-        try:
-            payload={"messages":[{"originator":D7_NUMBER,"content":payload_content,"recipients":[{"recipient":to_clean,"recipient_type":"individual"}]}]}
+    # D7 CORRECT FORMAT = ATTACHMENT
+    payload={
+        "messages":[{
+            "originator":D7_NUMBER,
+            "content":{
+                "message_type":"ATTACHMENT",
+                "attachment":{
+                    "type":"image",
+                    "url": image_url,
+                    "caption": caption[:900],
+                    "filename": "image.jpg"
+                }
+            },
+            "recipients":[{"recipient":to_clean,"recipient_type":"individual"}]
+        }]
+    }
+    try:
+        r=requests.post(url, headers=headers, json=payload, timeout=15)
+        log(f"ATTACHMENT IMAGE {r.status_code} {r.text[:500]}")
+        if r.status_code != 200:
+            payload["messages"][0]["content"]["attachment"].pop("filename", None)
             r=requests.post(url, headers=headers, json=payload, timeout=15)
-            log(f"ATTEMPT {payload_content['message_type']} {r.status_code} {r.text[:300]}")
-            if r.status_code == 200 and "failed" not in r.text.lower():
-                return  # SUCCESS!
-        except Exception as e:
-            log(f"ATTEMPT ERR {e}")
-            continue
-    
-    # If all 3 fail, send text+link (your current screenshot - works)
-    log("ALL IMG FAILED - FALLBACK")
-    send_text(to, f"{caption}\n\n{image_url}")
+            log(f"RETRY NO FILENAME {r.status_code} {r.text[:500]}")
+            if r.status_code != 200:
+                send_text(to, f"{caption}\n\n{image_url}")
+    except Exception as e:
+        log(f"IMG ERR {e}")
+        send_text(to, f"{caption}\n\n{image_url}")
+
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return f"V19 FINAL REAL IMAGES {RESERVE_LINK}",200
+    if request.method=="GET": return f"V19.3 REAL IMAGES FIXED {RESERVE_LINK}",200
     raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
     sender=""; msg=""
     if "event_content" in data:
@@ -193,9 +198,9 @@ def webhook():
     return jsonify({"status":"sent"}),200
 
 @app.route("/")
-def home(): return f"V19 FINAL REAL IMAGES {RESERVE_LINK}"
+def home(): return f"V19.3 REAL IMAGES FIXED {RESERVE_LINK}"
 @app.route("/health")
-def health(): return jsonify({"model":MODELS[0],"images":"real"})
+def health(): return jsonify({"model":MODELS[0],"images":"real-fixed"})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
