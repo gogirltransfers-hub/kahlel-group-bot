@@ -1,64 +1,68 @@
 import os, requests, json, re
 from flask import Flask, request, jsonify
-from groq import Groq
 
 app = Flask(__name__)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-D7_API_TOKEN = os.getenv("D7_API_TOKEN")
 SHEET_URL = os.getenv("SHEET_WEBHOOK_URL")
+D7_API_TOKEN = os.getenv("D7_API_TOKEN")
 D7_NUMBER = "+264817491383"
 
 def log(m): print(m, flush=True)
 
 WELCOME = """👉Welcome to Kahlel Group! 👋
-1️⃣ 🤖 Kahlel AI - Robotics & Automation
-2️⃣ 🎬 Kahlel Flix - Outdoor Cinema
-3️⃣ ✈️ Afri-Ka Travels - Travel & Tours
-4️⃣ 📺 Vivid Graphix - LED Display & Signage
-Reply 1-4 or type name"""
+1️⃣ 🤖 Kahlel AI
+2️⃣ 🎬 Kahlel Flix
+3️⃣ ✈️ Afri-Ka Travels
+4️⃣ 📺 Vivid Graphix
+Reply 1-4"""
 
-MENUS = {
- "1": "🤖 *Kahlel AI*\nWe build WhatsApp bots like this!\nFrom N$1500 setup\nWhat business to automate?\nReply *Menu*",
- "2": "🎬 *Kahlel Flix*\nSmall N$1500 (30) Med N$2500 (80) Large N$4000 (150+)\nScreen+projector+sound\nWhen is event? Reply *Menu*",
- "3": "✈️ *GoGirl Transfers*\nAirport N$350, City N$150-250, Luxury N$800/day\n24/7 Female drivers\nSend pickup location! Reply *Menu*",
- "4": "📺 *Vivid Graphix*\nLED rental N$2000/day, signage\nWhat size? Reply *Menu*"
-}
+MENUS = {"1":"🤖 Kahlel AI\nFrom N$1500\nReply Menu","2":"🎬 Flix N$1500-4000\nReply Menu","3":"✈️ GoGirl Airport N$350 City N$150-250\nReply Menu","4":"📺 Vivid LED N$2000/day\nReply Menu"}
 
-def extract_appointment(msg):
-    """AI extracts name/date/location/people/service"""
-    try:
-        if not GROQ_API_KEY or "gsk_" not in GROQ_API_KEY:
-            return None
-        client = Groq(api_key=GROQ_API_KEY)
-        prompt = f"""From: "{msg}" extract JSON ONLY: {{"service":"Kahlel AI|Kahlel Flix|GoGirl Travel|Vivid Graphix|unknown","name":"","date":"","location":"","people":"","message":"{msg}"}} If no booking intent, return {{"service":"unknown"}}. JSON only, no text."""
-        c = client.chat.completions.create(model="llama-3.1-8b-instant",
-            messages=[{"role":"user","content":prompt}], max_tokens=250, temperature=0.1)
-        txt = c.choices[0].message.content
-        m = re.search(r'\{{.*\}}', txt, re.DOTALL)
-        if m:
-            return json.loads(m.group())
-    except Exception as e:
-        log(f"Extract err {e}")
-    return None
-
-def ai_reply(msg):
-    try:
-        if not GROQ_API_KEY or "gsk_" not in GROQ_API_KEY: return None
-        client = Groq(api_key=GROQ_API_KEY)
-        c = client.chat.completions.create(model="llama-3.1-8b-instant",
-            messages=[{"role":"system","content":"You are Kahlel Group Namibia. 1)AI bots N$1500+ 2)Flix N$1500-4000 3)GoGirl Airport N$350 City N$150 24/7 female drivers 4)Vivid LED N$2000/day. If booking, ask name/date/location/people. Be short friendly. End Type Menu."},
-                      {"role":"user","content":msg}], max_tokens=350)
-        return c.choices[0].message.content
-    except Exception as e:
-        log(f"Groq err {e}"); return None
+def hard_extract(msg):
+    low = msg.lower()
+    # defaults
+    service = "GoGirl Travel" if "gogirl" in low or "airport" in low or "travel" in low else "Appointment"
+    if "flix" in low: service="Kahlel Flix"
+    if "vivid" in low or "led" in low: service="Vivid Graphix"
+    if "kahlel ai" in low or "bot" in low: service="Kahlel AI"
+    
+    # name
+    name = ""
+    m = re.search(r'name\s*[:=]?\s*([A-Za-z]+)', msg, re.I)
+    if m: name = m.group(1)
+    
+    # people
+    people = ""
+    m = re.search(r'(\d+)\s*people', low)
+    if m: people = m.group(1)
+    
+    # date
+    date = ""
+    m = re.search(r'(tomorrow\s*\d*\s*am|tomorrow\s*\d*\s*pm|today\s*\d*\s*am|\d+\s*am|\d+\s*pm)', low)
+    if m: date = m.group(1)
+    else:
+        if "tomorrow" in low: date="tomorrow"
+        if "today" in low: date="today"
+    
+    # location from X to Y
+    location = ""
+    m = re.search(r'from\s+(.+?)\s+to\s+([^,]+)', msg, re.I)
+    if m:
+        location = f"{m.group(1).strip()} to {m.group(2).strip()}"
+    else:
+        m = re.search(r'from\s+([A-Za-z ]+)', msg, re.I)
+        if m: location = m.group(1).strip()
+    
+    result = {"service":service,"name":name,"date":date,"location":location,"people":people}
+    log(f"REGEX RESULT: {result}")
+    return result
 
 def save_full(phone, service, name, date, location, people, message):
     if not SHEET_URL:
-        log("No SHEET_URL"); return
+        log("NO SHEET_URL!"); return
+    payload = {"phone":phone,"service":service,"name":name,"date":date,"location":location,"people":people,"message":message}
     try:
-        payload = {"phone":phone,"service":service,"name":name,"date":date,"location":location,"people":people,"message":message}
         r = requests.post(SHEET_URL, json=payload, timeout=10)
-        log(f"SHEET SAVE {service} | {name} | {date} | {location} | {r.status_code}")
+        log(f"SAVED FINAL: {service}|{name}|{date}|{location}|{people} -> {r.status_code} {r.text[:100]}")
     except Exception as e:
         log(f"SHEET ERR {e}")
 
@@ -73,7 +77,7 @@ def send(to, text):
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return "V7 Appointment Parser LIVE",200
+    if request.method=="GET": return "V10 HARD REGEX",200
     try:
         raw=request.get_data(as_text=True)
         data=json.loads(raw) if raw else {}
@@ -86,42 +90,30 @@ def webhook():
         if not sender or not msg: return jsonify({"status":"ignored"}),200
         sender="+"+str(sender).strip().lstrip("+")
         low=msg.lower().strip()
-        log(f"USER: {msg}")
+        log(f"USER RAW: {msg}")
 
-        # 1,2,3,4 fast path
-        if low=="1" or low.startswith("1 ") or "kahlel ai" in low:
-            reply=MENUS["1"]; save_full(sender,"Kahlel AI","","","","",msg)
-        elif low=="2" or low.startswith("2 ") or "flix" in low:
-            reply=MENUS["2"]; save_full(sender,"Kahlel Flix","","","","",msg)
-        elif low=="3" or low.startswith("3 ") or "gogirl" in low or "travel" in low or "afri" in low:
-            reply=MENUS["3"]; save_full(sender,"GoGirl Travel","","","","",msg)
-        elif low=="4" or low.startswith("4 ") or "vivid" in low or "led" in low:
-            reply=MENUS["4"]; save_full(sender,"Vivid Graphix","","","","",msg)
-        elif low in ["hello","hi","hey","dumelang","menu","start","0","welcome","help"]:
+        is_booking = len(msg.split())>3 and any(k in low for k in ["appointment","book","tomorrow","today","name","from","people","am","pm"])
+
+        if is_booking:
+            ext = hard_extract(msg)
+            save_full(sender, ext["service"], ext["name"], ext["date"], ext["location"], ext["people"], msg)
+            reply = f"✅ Appointment saved!\nService: {ext['service']}\nName: {ext['name']}\nDate: {ext['date']}\nLocation: {ext['location']}\nPeople: {ext['people']}\n\nWe'll confirm shortly! Type Menu"
+        elif low in ["1","2","3","4"]:
+            reply=MENUS[low]; save_full(sender, MENUS[low][:10], "", "", "", "", msg)
+        elif low in ["hello","hi","menu","start","welcome"]:
             reply=WELCOME
         else:
-            # Try AI extraction for full appointment
-            extracted = extract_appointment(msg)
-            log(f"EXTRACTED: {extracted}")
-            if extracted and extracted.get("service")!="unknown":
-                save_full(sender, extracted.get("service",""), extracted.get("name",""), extracted.get("date",""), extracted.get("location",""), extracted.get("people",""), msg)
-                reply = ai_reply(msg) or f"✅ Got it! Saved appointment for {extracted.get('service')} - {extracted.get('date')} {extracted.get('location')}. We'll confirm! Type Menu"
-            else:
-                ai = ai_reply(msg)
-                reply = ai or WELCOME
-                # Still save if looks like booking
-                if any(k in low for k in ["book","appointment","need","tomorrow","today","airport","cinema"]):
-                    save_full(sender,"Appointment","","","","",msg)
+            reply=WELCOME
 
         send(sender, reply)
         return jsonify({"status":"sent"}),200
     except Exception as e:
-        log(f"EXC {e}"); return jsonify({"ok":True}),200
+        log(f"EXC {e}"); import traceback; traceback.print_exc(); return jsonify({"ok":True}),200
 
 @app.route("/")
-def home(): return "Kahlel V7 Full Appointments"
+def home(): return "V10"
 @app.route("/health")
-def health(): return jsonify({"groq":bool(GROQ_API_KEY and "gsk_" in GROQ_API_KEY),"sheet":bool(SHEET_URL)})
+def health(): return jsonify({"sheet":bool(SHEET_URL)})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
