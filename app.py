@@ -129,11 +129,32 @@ def send_image(to, image_url, caption):
         to_clean="+"+str(to).strip().lstrip("+")
         url="https://api.d7networks.com/whatsapp/v2/send"
         headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
-        payload={"messages":[{"originator":D7_NUMBER,"content":{"message_type":"IMAGE","image":{"url": image_url,"caption": caption[:1000]}},"recipients":[{"recipient":to_clean,"recipient_type":"individual"}]}]}
+        
+        # TRY 1: Official Image
+        payload={
+            "messages":[{
+                "originator":D7_NUMBER,
+                "content":{
+                    "message_type":"IMAGE",
+                    "image":{"url": image_url,"caption": caption[:900]}
+                },
+                "recipients":[{"recipient":to_clean,"recipient_type":"individual"}]
+            }]
+        }
         r=requests.post(url, headers=headers, json=payload, timeout=15)
-        log(f"IMG {r.status_code}")
-        if r.status_code != 200: send_text(to, caption)
-    except: send_text(to, caption)
+        log(f"IMG TRY {r.status_code} {r.text[:300]}")
+        
+        # If D7 fails, fallback to TEXT with link - WhatsApp shows preview
+        if r.status_code != 200 or "failed" in r.text.lower():
+            log("IMG FALLBACK TO TEXT+LINK")
+            # Send caption + image link - WhatsApp will unfurl it as image
+            fallback = f"{caption}\n\n🖼️ {image_url}"
+            send_text(to, fallback)
+            
+    except Exception as e:
+        log(f"IMG ERR {e}")
+        # Last resort - text with link
+        send_text(to, f"{caption}\n\n{image_url}")
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
