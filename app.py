@@ -14,14 +14,14 @@ WELCOME = """👉Welcome to Kahlel Group! 👋
 3️⃣ ✈️ Afri-Ka Travel - Travel & Tours
 4️⃣ 📺 Vivid Graphix - LED Display & Signage
 
-Reply 1-4 or type your booking (e.g. Book GoGirl tomorrow 5am, name Leon)
+Reply 1-4 or type your booking (e.g. Book Afri-Ka tomorrow 5am, name Leon)
 Type MENU to go back"""
 
 MENUS = {
- "1": "Kahlel AI\nBots from N$1500. What business? Reply Menu",
- "2": "Kahlel Flix\nN$1500-4000. When event? Reply Menu",
- "3": "GoGirl Afri-Ka Travel\nAirport N$350, City N$150-250, 24/7 female drivers. Send pickup? Reply Menu",
- "4": "Vivid Graphix\nLED N$2000/day. What size? Reply Menu"
+ "1": "🤖 Kahlel AI\nWebsite: www.kahlel-ai.com\nBots from N$1500 + N$500/mo\nAuto-replies, bookings, Sheets CRM\n\nWhat business?\nReply Menu",
+ "2": "🎬 Kahlel Flix\nWebsite: www.kahlelflix.com\nSmall N$1500 (30 ppl)\nMedium N$2500 (80 ppl)\nLarge N$4000 (150+ ppl)\nProjector+Sound+Screen\n\nWhen is event?\nReply Menu",
+ "3": "✈️ Afri-Ka Travel\nWebsite: www.afri-katours.com\nAirport N$350 | City N$150-250\n24/7 female drivers, safe, child seats\nHosea Kutako ↔ Windhoek\n\nSend pickup FROM-TO + Date/Time + Name?\nReply Menu",
+ "4": "📺 Vivid Graphix\nWebsite: www.kahlel.co.za\nLED N$2000/day, stage, signage, branding\n\nWhat size?\nReply Menu"
 }
 
 def hard_extract(msg):
@@ -77,17 +77,17 @@ def groq_extract_and_reply(msg):
         except Exception as e:
             log(f"Groq extract fail {e}")
         try:
-            sys_prompt="""You are Kahlel Group Namibia assistant. You have 4 brands:
+            sys_prompt="""You are Kahlel Group Namibia assistant. 4 brands:
 
-1. Kahlel AI - WhatsApp bots & automation. Setup N$1500 + N$500/mo. Website: www.kahlel-ai.com
+1. Kahlel AI - WhatsApp bots. Website: www.kahlel-ai.com. Setup N$1500 + N$500/mo
 
-2. Kahlel Flix - Outdoor Cinema. Website: www.kahlelflix.com. Packages: Small N$1500 (30 ppl), Medium N$2500 (80 ppl), Large N$4000 (150+ ppl). Includes projector, sound, screen. Windhoek.
+2. Kahlel Flix - Outdoor Cinema. Website: www.kahlelflix.com. Small N$1500, Medium N$2500, Large N$4000. Windhoek + surrounds. Instagram @kahlelflix
 
-3. Afri-Ka Travel - Airport & City Transfers. Website: www.afri-katours.com. Prices: Airport N$350, City N$150-250, Hourly N$200. 24/7 female drivers, safe for women & kids.
+3. Afri-Ka Travel - Airport Transfers. Website: www.afri-katours.com. Airport N$350, City N$150-250, Hourly N$200, Luxury N$800/day. 24/7 female drivers, safe for women & kids, child seats. Coverage: Windhoek to Hosea Kutako Airport.
 
-4. Vivid Graphix - LED & Signage. Website: www.kahlel.co.za. LED N$2000/day.
+4. Vivid Graphix - LED & Signage. Website: www.kahlel.co.za. LED N$2000/day
 
-If user asks about Flix, answer from www.kahlelflix.com. If booking, confirm warmly with name/date/location/people. Be short, friendly. End with Type Menu."""
+If asked about prices/websites, answer from above. If booking Afri-Ka, confirm with name/date/location/people. Short, friendly. End with Type Menu."""
             c2=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":msg}], max_tokens=400, temperature=0.6)
             smart_reply=c2.choices[0].message.content
             log(f"GROQ REPLY: {smart_reply[:100]}")
@@ -116,7 +116,7 @@ def send(to, text):
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return "V13.1 Emoji Fixed",200
+    if request.method=="GET": return "V14 FINAL Emoji + Websites",200
     try:
         raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
         sender=""; msg=""
@@ -136,7 +136,7 @@ def webhook():
             send(sender, confirm)
             try: send(OWNER_NUMBER, f"NEW BOOKING {extracted['service']} | {extracted['name']} | {extracted['date']} | {extracted['location']} | {extracted['people']} | {sender}")
             except: pass
-        elif low in ["1","2","3","4"]:
+        elif low in ["1","2","3","4"] and len(low)==1:
             reply=MENUS[low]; sm={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}[low]
             save_full(sender, sm, "", "", "", "", f"Pressed {low}")
             send(sender, reply)
@@ -150,7 +150,7 @@ def webhook():
         log(f"EXC {e}"); return jsonify({"ok":True}),200
 
 @app.route("/")
-def home(): return "V13.1 GoGirl Emoji Fixed"
+def home(): return "V14 FINAL Afri-Ka www.afri-katours.com"
 @app.route("/health")
 def health(): return jsonify({"groq":bool(GROQ_API_KEY and "gsk_" in GROQ_API_KEY),"sheet":bool(SHEET_URL)})
 
