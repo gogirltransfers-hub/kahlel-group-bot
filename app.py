@@ -14,7 +14,8 @@ WELCOME = """👉Welcome to Kahlel Group! 👋
 3️⃣ ✈️ Afri-Ka Travel - Travel & Tours
 4️⃣ 📺 Vivid Graphix - LED Display & Signage
 
-Reply 1-4 or type your booking (e.g. Book GoGirl tomorrow 5am, name Leon) Type MENU to go back"""
+Reply 1-4 or type your booking (e.g. Book GoGirl tomorrow 5am, name Leon)
+Type MENU to go back"""
 
 MENUS = {
  "1": "Kahlel AI\nBots from N$1500. What business? Reply Menu",
@@ -25,7 +26,6 @@ MENUS = {
 
 def hard_extract(msg):
     low=msg.lower()
-    # FIX: Check GoGirl keywords FIRST with priority
     service="GoGirl Afri-Ka Travel"
     if "flix" in low and "gogirl" not in low and "airport" not in low and "transfer" not in low:
         service="Kahlel Flix"
@@ -33,25 +33,20 @@ def hard_extract(msg):
         service="Vivid Graphix"
     elif "kahlel ai" in low or ("bot" in low and "airport" not in low):
         service="Kahlel AI"
-    # If contains GoGirl/Afri-Ka/airport/transfer -> force GoGirl
     if any(k in low for k in ["gogirl","afri-ka","afrika","airport","hosea kutako","transfer","kleine kuppe"]):
         service="GoGirl Afri-Ka Travel"
-    
     name=""; people=""; date=""; location=""
     m=re.search(r'name\s*[:=]?\s*([A-Za-z]+)', msg, re.I)
     if m: name=m.group(1).capitalize()
     m=re.search(r'(\d+)\s*people', low)
     if m: people=m.group(1)
-    # date with time
     m=re.search(r'(tomorrow\s*\d*\s*am|tomorrow\s*\d*\s*pm|today\s*\d*\s*am|today\s*\d*\s*pm|\d+\s*am|\d+\s*pm)', low)
     if m: date=m.group(1)
     else:
         if "tomorrow" in low: date="tomorrow"
         elif "today" in low: date="today"
-    # location from X to Y - improved
     m=re.search(r'from\s+(.+?)\s+to\s+([^,]+?)(?:,|\s+name|\s+\d+\s+people|$)', msg, re.I)
-    if m:
-        location=f"{m.group(1).strip()} to {m.group(2).strip()}"
+    if m: location=f"{m.group(1).strip()} to {m.group(2).strip()}"
     else:
         m=re.search(r'from\s+([^,]+?)(?:,|\s+name|$)', msg, re.I)
         if m: location=m.group(1).strip()
@@ -59,17 +54,14 @@ def hard_extract(msg):
     return {"service":service,"name":name,"date":date,"location":location,"people":people}
 
 def groq_extract_and_reply(msg):
-    # FIXED MODEL: llama-3.3-70b-versatile (always available)
     MODEL="llama-3.3-70b-versatile"
     extracted=hard_extract(msg)
     smart_reply=None
     try:
         from groq import Groq
         if not GROQ_API_KEY or "gsk_" not in GROQ_API_KEY:
-            log("No Groq key, using regex only")
             return extracted, None
         client=Groq(api_key=GROQ_API_KEY)
-        # Try Groq extraction to improve
         try:
             prompt=f'Extract JSON only: Service=GoGirl Afri-Ka Travel|Kahlel Flix|Vivid Graphix|Kahlel AI, name, date, location, people from "{msg}". Return {{"service":"","name":"","date":"","location":"","people":""}} only.'
             c=client.chat.completions.create(model=MODEL, messages=[{"role":"user","content":prompt}], max_tokens=300, temperature=0.1)
@@ -80,26 +72,23 @@ def groq_extract_and_reply(msg):
                 gj=json.loads(m.group())
                 for k in ["name","date","location","people"]:
                     if gj.get(k): extracted[k]=gj[k]
-                # don't overwrite service if regex already forced GoGirl
                 if "gogirl" not in msg.lower() and "airport" not in msg.lower():
                     if gj.get("service"): extracted["service"]=gj["service"]
         except Exception as e:
             log(f"Groq extract fail {e}")
-        
-        # Smart reply
         try:
-            sys="sys="""You are Kahlel Group Namibia assistant. You have 4 brands:
+            sys_prompt="""You are Kahlel Group Namibia assistant. You have 4 brands:
 
-1. Kahlel AI - WhatsApp bots & automation. Setup N$1500 + N$500/mo. Website: www.kahlel-ai.com. Builds bots like this one, auto-replies, CRM to Google Sheets.
+1. Kahlel AI - WhatsApp bots & automation. Setup N$1500 + N$500/mo. Website: www.kahlel-ai.com
 
-2. Kahlel Flix - Outdoor Cinema. Website: www.kahlelflix.com. Packages: Small N$1500 (30 people, 3m screen), Medium N$2500 (80 people, 4m screen), Large N$4000 (150+ people, 5m screen). Includes projector, sound, screen, setup. Windhoek + surroundings. Instagram: @kahlelflix
+2. Kahlel Flix - Outdoor Cinema. Website: www.kahlelflix.com. Packages: Small N$1500 (30 ppl), Medium N$2500 (80 ppl), Large N$4000 (150+ ppl). Includes projector, sound, screen. Windhoek.
 
-3. Afri-Ka Travel - Airport & City Transfers. Website: www.afri-katours.com, book via WhatsApp. Prices: Airport Hosea Kutako N$350, City N$150-250, Hourly N$200, Luxury/Safari N$800/day. 24/7 female drivers, safe for women & kids, child seats available. Coverage: Windhoek, Kleine Kuppe, Eros, etc. to Hosea Kutako Airport.
+3. Afri-Ka Travel - Airport & City Transfers. Website: www.afri-katours.com. Prices: Airport N$350, City N$150-250, Hourly N$200. 24/7 female drivers, safe for women & kids.
 
-4. Vivid Graphix - LED & Signage. Website: www.kahlel.co.za.LED screen rental N$2000/day, stage, sound, signage, vehicle branding.
+4. Vivid Graphix - LED & Signage. Website: www.kahlel.co.za. LED N$2000/day.
 
-If user asks about Flix prices/movies, answer from www.kahlelflix.com knowledge. If booking, confirm warmly with name/date/location/people. Be short, friendly, no long paragraphs. End with Type Menu.""""
-            c2=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys},{"role":"user","content":msg}], max_tokens=400, temperature=0.6)
+If user asks about Flix, answer from www.kahlelflix.com. If booking, confirm warmly with name/date/location/people. Be short, friendly. End with Type Menu."""
+            c2=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":msg}], max_tokens=400, temperature=0.6)
             smart_reply=c2.choices[0].message.content
             log(f"GROQ REPLY: {smart_reply[:100]}")
         except Exception as e:
@@ -127,7 +116,7 @@ def send(to, text):
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return "V13 FIXED MODEL GoGirl Afri-Ka",200
+    if request.method=="GET": return "V13.1 Emoji Fixed",200
     try:
         raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
         sender=""; msg=""
@@ -139,15 +128,11 @@ def webhook():
         is_booking = len(msg.split())>3 and any(k in low for k in ["appointment","book","tomorrow","today","name","from","people","am","pm","airport","transfer"])
         if is_booking:
             extracted, smart = groq_extract_and_reply(msg)
-            log(f"FINAL {extracted}")
             save_full(sender, extracted["service"], extracted["name"], extracted["date"], extracted["location"], extracted["people"], msg)
-            if smart:
-                reply=smart
-            else:
-                reply=f"Booking Confirmed!\nService: {extracted['service']}\nName: {extracted['name'] or 'Guest'}\nDate: {extracted['date']}\nPickup: {extracted['location']}\nPeople: {extracted['people'] or '1'}\n\nWe will confirm shortly! Type Menu"
+            reply=smart or f"Booking Confirmed!\nService: {extracted['service']}\nName: {extracted['name'] or 'Guest'}\nDate: {extracted['date']}\nPickup: {extracted['location']}\nPeople: {extracted['people'] or '1'}\n\nWe will confirm shortly! Type Menu"
             send(sender, reply)
             time.sleep(1)
-            confirm=f"Confirmation - {extracted['service']}\nHi {extracted['name'] or 'there'}! Scheduled: {extracted['date']} | {extracted['location']} | {extracted['people']} ppl. Driver contacts 1hr before. GoGirl Afri-Ka Team"
+            confirm=f"Confirmation - {extracted['service']}\nHi {extracted['name'] or 'there'}! Scheduled: {extracted['date']} | {extracted['location']} | {extracted['people']} ppl. Driver contacts 1hr before. GoGirl Team"
             send(sender, confirm)
             try: send(OWNER_NUMBER, f"NEW BOOKING {extracted['service']} | {extracted['name']} | {extracted['date']} | {extracted['location']} | {extracted['people']} | {sender}")
             except: pass
@@ -165,7 +150,7 @@ def webhook():
         log(f"EXC {e}"); return jsonify({"ok":True}),200
 
 @app.route("/")
-def home(): return "V13 GoGirl Afri-Ka Travel Fixed"
+def home(): return "V13.1 GoGirl Emoji Fixed"
 @app.route("/health")
 def health(): return jsonify({"groq":bool(GROQ_API_KEY and "gsk_" in GROQ_API_KEY),"sheet":bool(SHEET_URL)})
 
