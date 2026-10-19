@@ -8,12 +8,13 @@ D7_NUMBER = "+264817491383"
 OWNER_NUMBER = "+264812945081"
 def log(m): print(m, flush=True)
 
-WELCOME = """Welcome to Kahlel Group!
-1. Kahlel AI - Bots
-2. Kahlel Flix - Cinema
-3. GoGirl Afri-Ka Travel - Airport Transfers
-4. Vivid Graphix - LED
-Reply 1-4 or book like: Book GoGirl tomorrow 5am from Kleine Kuppe to airport, name Leon, 2 people"""
+WELCOME = """👉Welcome to Kahlel Group! 👋
+1️⃣ 🤖 Kahlel AI - Robotics & Automation
+2️⃣ 🎬 Kahlel Flix - Outdoor Cinema
+3️⃣ ✈️ Afri-Ka Travel - Travel & Tours
+4️⃣ 📺 Vivid Graphix - LED Display & Signage
+
+Reply 1-4 or type your booking (e.g. Book GoGirl tomorrow 5am, name Leon) Type MENU to go back"""
 
 MENUS = {
  "1": "Kahlel AI\nBots from N$1500. What business? Reply Menu",
@@ -87,7 +88,17 @@ def groq_extract_and_reply(msg):
         
         # Smart reply
         try:
-            sys="You are Kahlel Group Namibia. 1)Kahlel AI bots N$1500 2)Flix cinema N$1500-4000 3)GoGirl Afri-Ka Travel Airport N$350 City N$150 female drivers 24/7 4)Vivid LED N$2000/day. If booking, confirm warmly with name/date/location/people. Short friendly. End Type Menu."
+            sys="sys="""You are Kahlel Group Namibia assistant. You have 4 brands:
+
+1. Kahlel AI - WhatsApp bots & automation. Setup N$1500 + N$500/mo. Website: www.kahlel-ai.com. Builds bots like this one, auto-replies, CRM to Google Sheets.
+
+2. Kahlel Flix - Outdoor Cinema. Website: www.kahlelflix.com. Packages: Small N$1500 (30 people, 3m screen), Medium N$2500 (80 people, 4m screen), Large N$4000 (150+ people, 5m screen). Includes projector, sound, screen, setup. Windhoek + surroundings. Instagram: @kahlelflix
+
+3. Afri-Ka Travel - Airport & City Transfers. Website: www.afri-katours.com, book via WhatsApp. Prices: Airport Hosea Kutako N$350, City N$150-250, Hourly N$200, Luxury/Safari N$800/day. 24/7 female drivers, safe for women & kids, child seats available. Coverage: Windhoek, Kleine Kuppe, Eros, etc. to Hosea Kutako Airport.
+
+4. Vivid Graphix - LED & Signage. Website: www.kahlel.co.za.LED screen rental N$2000/day, stage, sound, signage, vehicle branding.
+
+If user asks about Flix prices/movies, answer from www.kahlelflix.com knowledge. If booking, confirm warmly with name/date/location/people. Be short, friendly, no long paragraphs. End with Type Menu.""""
             c2=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys},{"role":"user","content":msg}], max_tokens=400, temperature=0.6)
             smart_reply=c2.choices[0].message.content
             log(f"GROQ REPLY: {smart_reply[:100]}")
