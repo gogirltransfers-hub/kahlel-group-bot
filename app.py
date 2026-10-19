@@ -125,37 +125,33 @@ def send_text(to, text):
     except: pass
 
 def send_image(to, image_url, caption):
-    try:
-        to_clean="+"+str(to).strip().lstrip("+")
-        url="https://api.d7networks.com/whatsapp/v2/send"
-        headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
-        
-        # TRY 1: Official Image
-        payload={
-            "messages":[{
-                "originator":D7_NUMBER,
-                "content":{
-                    "message_type":"IMAGE",
-                    "image":{"url": image_url,"caption": caption[:900]}
-                },
-                "recipients":[{"recipient":to_clean,"recipient_type":"individual"}]
-            }]
-        }
-        r=requests.post(url, headers=headers, json=payload, timeout=15)
-        log(f"IMG TRY {r.status_code} {r.text[:300]}")
-        
-        # If D7 fails, fallback to TEXT with link - WhatsApp shows preview
-        if r.status_code != 200 or "failed" in r.text.lower():
-            log("IMG FALLBACK TO TEXT+LINK")
-            # Send caption + image link - WhatsApp will unfurl it as image
-            fallback = f"{caption}\n\n🖼️ {image_url}"
-            send_text(to, fallback)
-            
-    except Exception as e:
-        log(f"IMG ERR {e}")
-        # Last resort - text with link
-        send_text(to, f"{caption}\n\n{image_url}")
-
+    to_clean="+"+str(to).strip().lstrip("+")
+    url="https://api.d7networks.com/whatsapp/v2/send"
+    headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
+    
+    attempts = [
+        # Format 1
+        {"message_type":"IMAGE","image":{"url": image_url, "caption": caption[:900]}},
+        # Format 2 - link not url
+        {"message_type":"IMAGE","image":{"link": image_url, "caption": caption[:900]}},
+        # Format 3 - media
+        {"message_type":"MEDIA","media":{"type":"image","url": image_url, "caption": caption[:900]}}
+    ]
+    
+    for payload_content in attempts:
+        try:
+            payload={"messages":[{"originator":D7_NUMBER,"content":payload_content,"recipients":[{"recipient":to_clean,"recipient_type":"individual"}]}]}
+            r=requests.post(url, headers=headers, json=payload, timeout=15)
+            log(f"ATTEMPT {payload_content['message_type']} {r.status_code} {r.text[:300]}")
+            if r.status_code == 200 and "failed" not in r.text.lower():
+                return  # SUCCESS!
+        except Exception as e:
+            log(f"ATTEMPT ERR {e}")
+            continue
+    
+    # If all 3 fail, send text+link (your current screenshot - works)
+    log("ALL IMG FAILED - FALLBACK")
+    send_text(to, f"{caption}\n\n{image_url}")
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
     if request.method=="GET": return f"V19 FINAL REAL IMAGES {RESERVE_LINK}",200
