@@ -1,4 +1,4 @@
-import os, requests, json, re, time
+import os, requests, json, re
 from flask import Flask, request, jsonify
 app = Flask(__name__)
 
@@ -6,107 +6,129 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 D7_API_TOKEN = os.getenv("D7_API_TOKEN")
 SHEET_URL = os.getenv("SHEET_WEBHOOK_URL")
 D7_NUMBER = "+264817491383"
-OWNER_NUMBER = "+264812945081"
 
 def log(m): print(m, flush=True)
-
-# --- SESSION MEMORY TO STOP LOOP ---
 SESSION = {}
-
-# --- NEW GROQ MODELS (old llama 3.3 is dead) ---
 MODELS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
 
+# YOUR LINKS
+RESERVE_LINK = "https://kahlelflix.com/products"
+WEBSITE_FLIX = "https://kahlelflix.com"
+
+# YOUR IMAGES - CHANGE THESE TO YOUR REAL IMAGES
+IMAGE_AI = "https://kahlelflix.com/cdn/shop/files/robot-ai.jpg"  # Robot image
+IMAGE_FLIX = "https://kahlelflix.com/cdn/shop/files/movie-under-stars.jpg"  # Movie under stars
+IMAGE_TRAVEL = "https://kahlelflix.com/cdn/shop/files/namibia-travel.jpg"  # Namibia desert
+IMAGE_LED = "https://kahlelflix.com/cdn/shop/files/led-screen.jpg"  # LED
+
+# TEMP PUBLIC IMAGES IF YOURS NOT READY (working now)
+IMAGE_AI = "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600"
+IMAGE_FLIX = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600"
+IMAGE_TRAVEL = "https://images.unsplash.com/photo-1516026672322-bc52d61a55e5?w=600"
+IMAGE_LED = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600"
+
 WELCOME = """👉Welcome to Kahlel Group! 👋
-1️⃣ 🤖 Kahlel AI - Robotics & Automation
-2️⃣ 🎬 Kahlel Flix - Outdoor Cinema
-3️⃣ ✈️ Afri-Ka Travel - Travel & Tours
-4️⃣ 📺 Vivid Graphix - LED Display & Signage
+1️⃣ 🤖 Kahlel AI - Robots & AI Agents
+2️⃣ 🎬 Kahlel Flix - Movie Under The Stars
+3️⃣ ✈️ Afri-Ka Travel - Namibia Holidays
+4️⃣ 📺 Vivid Graphix - LED Screens
 
-Reply 1-4 or type your booking (e.g. Book Afri-Ka tomorrow 5am, name Leon)
-Type MENU to go back"""
+Reply 1-4
+Type MENU"""
 
-MENUS = {
- "1": "🤖 Kahlel AI\nWebsite: www.kahlel-ai.com\nBots from N$1500 + N$500/mo\n\nWhat business?\nReply Menu",
- "2": "🎬 Kahlel Flix\nWebsite: www.kahlelflix.com\nSmall N$1500 (30 ppl)\nMedium N$2500 (80 ppl)\nLarge N$4000 (150+ ppl)\nProjector+Sound+Screen\n\nWhen is event?\nReply Menu",
- "3": "✈️ Afri-Ka Travel\nWebsite: www.afri-katours.com\nAirport N$350 | City N$150-250\n24/7 female drivers, safe, child seats\n\nSend pickup FROM-TO + Date/Time + Name?\nReply Menu",
- "4": "📺 Vivid Graphix\nWebsite: www.kahlel.co.za\nLED N$2000/day, stage, signage, branding\n\nWhat size?\nReply Menu"
+MENUS_TEXT = {
+ "1": """🤖 Kahlel AI - We Build The Future
+Website: www.kahlel-ai.com
+
+We do:
+✅ AI Robots - Schools, malls, receptions
+✅ AI Voice Agents - Answers calls 24/7
+✅ WhatsApp AI Bots - Like this one! Auto-booking
+✅ AI Automation - For your business
+
+Turn your business into AI business.
+Type DEMO + your business name.
+
+Reply Menu""",
+ "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
+Website: {WEBSITE_FLIX}
+Book here: {RESERVE_LINK}
+
+Imagine... warm night, stars above, big screen, popcorn in hand, friends laughing. That's Kahlel Flix.
+
+We bring cinema to YOU - backyard, lodge, school, corporate.
+
+📦 Packages: Small N$1500 (30) | Medium N$2500 (80) | Large N$4000 (150+)
+
+🎟️ Tickets: Normal N$55
+🥈 Silver N$390/y = N$27.50 + FREE popcorn Save N$3,120
+👑 VIP N$490/y = N$13.75 + FREE popcorn+drink+beanbag Save N$8,415 - MOST POPULAR!
+
+Type SILVER / VIP or RESERVE""",
+ "3": """✈️ Afri-Ka Travel & Tours - See Namibia First! 🇳🇦
+Website: www.afri-katours.com
+
+Your holiday in Namibia starts here!
+
+🌵 Sossusvlei, Swakopmund, Etosha Safaris
+🏖️ Beach Holidays & Lodge Bookings
+✈️ Airport N$350 | City N$150-250
+🗺️ Custom Tours for Families & Groups
+
+Send: FROM-TO + Date + People + Name
+Example: Windhoek to Swakop, 24 Nov, 2 ppl, John
+
+Reply Menu""",
+ "4": """📺 Vivid Graphix - LED Specialists
+Website: www.kahlel.co.za
+
+✅ LED Screen Hire - Indoor & Outdoor
+✅ LED Sales & Installation
+✅ LED Repair & Maintenance - We fix all brands
+✅ Content & Visual Support
+
+For concerts, churches, weddings, corporate.
+
+Tell us: Indoor/Outdoor + Size + Date?
+
+Reply Menu"""
 }
 
-def hard_extract(msg, last_service=None):
-    low=msg.lower()
-    service=last_service or "GoGirl Afri-Ka Travel"
-    if "flix" in low and "gogirl" not in low and "airport" not in low:
-        service="Kahlel Flix"
-    elif "vivid" in low or ("led" in low and "airport" not in low):
-        service="Vivid Graphix"
-    elif "kahlel ai" in low or ("bot" in low and "airport" not in low):
-        service="Kahlel AI"
-    if any(k in low for k in ["gogirl","afri-ka","afrika","airport","hosea kutako","transfer"]):
-        service="GoGirl Afri-Ka Travel"
-    name=""; people=""; date=""; location=""
-    m=re.search(r'name\s*[:=]?\s*([A-Za-z]+)', msg, re.I)
-    if m: name=m.group(1).capitalize()
-    m=re.search(r'(\d+)\s*people', low)
-    if m: people=m.group(1)
-    # catches 6 november, 6th nov, nov 6
-    m=re.search(r'(\d{1,2}(?:st|nd|rd|th)?\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{1,2}|tomorrow|today|\d+\s*am|\d+\s*pm)', low)
-    if m: date=m.group(1)
-    if not date and any(x in low for x in ["january","february","march","april","may","june","july","august","september","october","november","december"]):
-        date=msg.strip()
-    m=re.search(r'from\s+(.+?)\s+to\s+([^,]+?)(?:,|\s+name|\s+\d+\s+people|$)', msg, re.I)
-    if m: location=f"{m.group(1).strip()} to {m.group(2).strip()}"
-    log(f"REGEX {service}|{name}|{date}|{location}|{people} last={last_service}")
-    return {"service":service,"name":name,"date":date,"location":location,"people":people}
+MENUS_IMAGE = {
+ "1": IMAGE_AI,
+ "2": IMAGE_FLIX,
+ "3": IMAGE_TRAVEL,
+ "4": IMAGE_LED
+}
 
-def groq_extract_and_reply(msg, last_service=None):
-    extracted=hard_extract(msg, last_service)
-    smart_reply=None
+def groq_reply(msg, last=None):
+    low=msg.lower(); service=last or "Kahlel Group"
+    if "flix" in low: service="Kahlel Flix"
+    if "silver" in low or "vip" in low: service="Kahlel Flix"
+    if "ai" in low or "robot" in low: service="Kahlel AI"
+    if any(k in low for k in ["travel","afri-ka","airport","holiday","namibia"]): service="GoGirl Afri-Ka Travel"
+    if "vivid" in low or "led" in low: service="Vivid Graphix"
+    date=""; m=re.search(r'(\d{1,2}.*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*|tomorrow|today)', low)
+    if m: date=m.group(1)
+    extracted={"service":service,"date":date}
+    smart=None
     try:
         from groq import Groq
-        if not GROQ_API_KEY or "gsk_" not in GROQ_API_KEY:
-            log("No Groq key")
-            return extracted, None
         client=Groq(api_key=GROQ_API_KEY)
         for MODEL in MODELS:
             try:
-                prompt=f'Extract JSON only: Service=GoGirl Afri-Ka Travel|Kahlel Flix|Vivid Graphix|Kahlel AI, name, date, location, people from "{msg}". Last service {last_service}. Return {{"service":"","name":"","date":"","location":"","people":""}} only.'
-                c=client.chat.completions.create(model=MODEL, messages=[{"role":"user","content":prompt}], max_tokens=300, temperature=0.1)
-                txt=c.choices[0].message.content
-                log(f"GROQ RAW {MODEL}: {txt}")
-                m=re.search(r'\{{.*\}}', txt, re.DOTALL)
-                if m:
-                    gj=json.loads(m.group())
-                    for k in ["name","date","location","people"]:
-                        if gj.get(k): extracted[k]=gj[k]
-                    if gj.get("service") and last_service is None and gj["service"]:
-                        extracted["service"]=gj["service"]
-                # smart reply
-                sys_prompt=f"""You are Kahlel Group Namibia assistant. Last chosen service: {last_service or extracted['service']}.
-1. Kahlel AI Website www.kahlel-ai.com N$1500+500/mo
-2. Kahlel Flix Website www.kahlelflix.com Small N$1500 (30ppl) Medium N$2500 (80) Large N$4000 (150+). Includes projector+sound+screen. If user just gave date like '6 november' and last service is Kahlel Flix, DO NOT show main menu. Reply: 'Perfect! Kahlel Flix for 6 November. How many people, location/venue, and your name?' 
-3. Afri-Ka Travel Website www.afri-katours.com Airport N$350 City N$150-250
-4. Vivid Graphix Website www.kahlel.co.za LED N$2000/day
-Be short, friendly. Don't loop to welcome if date given."""
-                c2=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":msg}], max_tokens=350, temperature=0.6)
-                smart_reply=c2.choices[0].message.content
-                log(f"GROQ REPLY {MODEL}: {smart_reply[:150]}")
-                break
-            except Exception as e:
-                log(f"Model {MODEL} fail {e}")
-                continue
-    except Exception as e:
-        log(f"Groq lib err {e}")
-    return extracted, smart_reply
+                sys_prompt=f"You are Kahlel Group. Last {last}. Brands: AI robots+voice bots, Flix {WEBSITE_FLIX} packages N$1500-4000 tickets N$55 Silver N$390=N$27.50+popcorn save N$3120 VIP N$490=N$13.75+popcorn+drink+beanbag save N$8415 Reserve {RESERVE_LINK} Travel Namibia Sossusvlei Etosha Airport N$350 Vivid LED hire repair. Be short."
+                c=client.chat.completions.create(model=MODEL, messages=[{"role":"system","content":sys_prompt},{"role":"user","content":msg}], max_tokens=350, temperature=0.6)
+                smart=c.choices[0].message.content; break
+            except: continue
+    except: pass
+    return extracted, smart
 
 def save_full(phone, service, name, date, location, people, message):
-    try:
-        payload={"phone":phone,"service":service,"name":name,"date":date,"location":location,"people":people,"message":message}
-        r=requests.post(SHEET_URL, json=payload, timeout=10)
-        log(f"SAVED {service}|{name}|{date}|{location}|{people} {r.status_code}")
-    except Exception as e:
-        log(f"SHEET ERR {e}")
+    try: requests.post(SHEET_URL, json={"phone":phone,"service":service,"name":name,"date":date,"location":location,"people":people,"message":message}, timeout=10)
+    except: pass
 
-def send(to, text):
+def send_text(to, text):
     try:
         to_clean="+"+str(to).strip().lstrip("+")
         url="https://api.d7networks.com/whatsapp/v2/send"
@@ -115,52 +137,91 @@ def send(to, text):
         requests.post(url, headers=headers, json=payload, timeout=15)
     except: pass
 
+def send_image(to, image_url, caption):
+    try:
+        to_clean="+"+str(to).strip().lstrip("+")
+        url="https://api.d7networks.com/whatsapp/v2/send"
+        headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
+        # D7 Image format
+        payload={
+            "messages":[{
+                "originator":D7_NUMBER,
+                "content":{
+                    "message_type":"IMAGE",
+                    "image":{
+                        "url": image_url,
+                        "caption": caption[:1000]
+                    }
+                },
+                "recipients":[{"recipient":to_clean,"recipient_type":"individual"}]
+            }]
+        }
+        r=requests.post(url, headers=headers, json=payload, timeout=15)
+        log(f"IMG SEND {r.status_code} {r.text[:200]}")
+        if r.status_code != 200:  # fallback to text if image fails
+            send_text(to, caption)
+    except Exception as e:
+        log(f"IMG ERR {e}")
+        send_text(to, caption)
+
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return "V16 FIXED MODEL gpt-oss-20b + No Loop",200
-    try:
-        raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
-        sender=""; msg=""
-        if "event_content" in data:
-            m=data["event_content"].get("message",{}); sender=m.get("originator",""); txt=m.get("text",{}); msg=txt.get("body","") if isinstance(txt,dict) else str(txt)
-        if not sender or not msg: return jsonify({"status":"ignored"}),200
-        sender="+"+str(sender).strip().lstrip("+"); low=msg.lower().strip()
-        log(f"USER: {msg} sess={SESSION.get(sender)}")
-        
-        MONTHS = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
-        has_month = any(x in low for x in MONTHS)
-        is_date_short = bool(re.search(r'\d+\s*(nov|dec|jan|feb|mar|apr|may|jun|jul|aug|sep|oct)', low))
-        
-        is_booking = len(msg.split())>=2 and (any(k in low for k in ["appointment","book","tomorrow","today","name","from","people","am","pm","airport","transfer"]) or has_month or is_date_short or (SESSION.get(sender) and len(msg.split())>=1))
+    if request.method=="GET": return f"V19 WITH IMAGES {RESERVE_LINK}",200
+    raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
+    sender=""; msg=""
+    if "event_content" in data:
+        m=data["event_content"].get("message",{}); sender=m.get("originator",""); txt=m.get("text",{}); msg=txt.get("body","") if isinstance(txt,dict) else str(txt)
+    if not sender or not msg: return jsonify({"status":"ignored"}),200
+    sender="+"+str(sender).strip().lstrip("+"); low=msg.lower().strip()
 
-        if is_booking:
-            last = SESSION.get(sender)
-            extracted, smart = groq_extract_and_reply(msg, last)
-            SESSION[sender] = extracted["service"]
-            save_full(sender, extracted["service"], extracted["name"], extracted["date"] or msg, extracted["location"], extracted["people"], msg)
-            reply = smart or f"Got it! {extracted['service']} for {extracted['date'] or msg}. How many people & venue? Name?"
-            send(sender, reply)
-        elif low in ["1","2","3","4"] and len(low)==1:
-            mapping={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}
-            sm=mapping[low]
-            SESSION[sender]=sm
-            save_full(sender, sm, "", "", "", "", f"Pressed {low}")
-            send(sender, MENUS[low])
-        elif low in ["hello","hi","menu","start","welcome"]:
-            SESSION.pop(sender, None)
-            send(sender, WELCOME)
-        else:
-            last = SESSION.get(sender)
-            _, smart = groq_extract_and_reply(msg, last)
-            send(sender, smart or WELCOME)
+    # RESERVE
+    if any(k in low for k in ["reserve ticket","book ticket","reserve","booking link","products"]):
+        SESSION[sender]="Kahlel Flix"
+        save_full(sender, "Kahlel Flix - Reserve", "", "", "", "", msg)
+        send_image(sender, IMAGE_FLIX, f"🎟️ Reserve in 30 sec! 👇\nBook: {RESERVE_LINK}\n\nNormal N$55\nSilver N$27.50 + FREE popcorn\nVIP N$13.75 + FREE popcorn+drink+beanbag\n\nOr type SILVER / VIP + Name + Date!")
         return jsonify({"status":"sent"}),200
-    except Exception as e:
-        log(f"EXC {e}"); return jsonify({"ok":True}),200
+
+    # MEMBERSHIP
+    if any(k in low for k in ["silver","vip","membership","member","join club"]):
+        SESSION[sender]="Kahlel Flix"
+        if "vip" in low:
+            save_full(sender, "Kahlel Flix - VIP", "", "", "", "", msg)
+            send_image(sender, IMAGE_FLIX, f"👑 VIP N$490/y Saves N$8,415/y! Movies N$13.75 + FREE N$130\nBook: {RESERVE_LINK}\nPay N$490 & send screenshot!")
+        elif "silver" in low:
+            save_full(sender, "Kahlel Flix - SILVER", "", "", "", "", msg)
+            send_image(sender, IMAGE_FLIX, f"🥈 Silver N$390/y = N$27.50 + FREE popcorn Save N$3,120\nBook: {RESERVE_LINK}")
+        else:
+            send_image(sender, IMAGE_FLIX, f"We have 2 plans 007! 👇\n\n🥈 SILVER N$390/y N$27.50+popcorn Save N$3,120\n👑 VIP N$490/y N$13.75+popcorn+drink+beanbag Save N$8,415 MOST POPULAR\n\nReserve: {RESERVE_LINK}\nType SILVER or VIP")
+        return jsonify({"status":"sent"}),200
+
+    # BOOKING
+    MONTHS=["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+    has_month=any(x in low for x in MONTHS)
+    is_booking=len(msg.split())>=2 and (has_month or any(k in low for k in ["book","tomorrow","today","name","from","people","am","pm","airport","demo"]) or SESSION.get(sender))
+    
+    if is_booking:
+        extracted, smart=groq_reply(msg, SESSION.get(sender))
+        SESSION[sender]=extracted["service"]
+        save_full(sender, extracted["service"], "", extracted["date"] or msg, "", "", msg)
+        send_text(sender, smart or f"Got it! {extracted['service']} for {extracted['date'] or msg}. Book: {RESERVE_LINK}")
+    elif low in ["1","2","3","4"]:
+        mapping={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}
+        sm=mapping[low]; SESSION[sender]=sm
+        save_full(sender, sm, "", "", "", "", f"Pressed {low}")
+        # SEND IMAGE + TEXT
+        send_image(sender, MENUS_IMAGE[low], MENUS_TEXT[low])
+    elif low in ["hello","hi","menu","start","welcome"]:
+        SESSION.pop(sender, None)
+        send_text(sender, WELCOME)
+    else:
+        _, smart=groq_reply(msg, SESSION.get(sender))
+        send_text(sender, smart or WELCOME)
+    return jsonify({"status":"sent"}),200
 
 @app.route("/")
-def home(): return "V16 FIXED gpt-oss-20b Afri-Ka www.afri-katours.com"
+def home(): return f"V19 WITH IMAGES {RESERVE_LINK}"
 @app.route("/health")
-def health(): return jsonify({"groq":bool(GROQ_API_KEY and "gsk_" in GROQ_API_KEY),"sheet":bool(SHEET_URL),"model":MODELS[0]})
+def health(): return jsonify({"model":MODELS[0],"images":"enabled"})
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
