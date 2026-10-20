@@ -21,7 +21,7 @@ def should_reveal_contact(msg):
     return any(k in msg.lower() for k in triggers)
 
 HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
-REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}\n📅 Or TYPE 'Talk to Human' - I'll connect live!"
+REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
 
 CAL_LINKS = {
