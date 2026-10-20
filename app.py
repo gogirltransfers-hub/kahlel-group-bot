@@ -25,11 +25,14 @@ HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll conn
 REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
 
+# FIXED CAL_LINKS + MENUS_TEXT
 CAL_LINKS = {
  "Kahlel AI": "https://cal.com/leon-feris-fvlga3/kahlel-ai-robots-and-voice-ai",
  "GoGirl Afri-Ka Travel": "https://cal.com/leon-feris-fvlga3/afri-ka-tours-coloboration-call",
+ "Kahlel Travel": "https://cal.com/leon-feris-fvlga3/afri-ka-tours-coloboration-call", # ALIAS FIX
  "Kahlel Flix": "https://cal.com/leon-feris-fvlga3/outdoor-cinema",
  "Vivid Graphix": "https://cal.com/leon-feris-fvlga3/led-displays",
+ "Vivid Display": "https://cal.com/leon-feris-fvlga3/led-displays", # ALIAS FIX
  "Kahlel Group": "https://cal.com/leon-feris-fvlga3/kahlel-ai-robots-and-voice-ai"
 }
 
