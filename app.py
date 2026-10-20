@@ -11,9 +11,17 @@ def log(m): print(m, flush=True)
 SESSION = {}
 MODELS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
 
-# LOCKED REAL CONTACT
-CONTACT_PHONE = "+264812086309"
+# V19.9 SMART HYBRID - CONTACTS HIDDEN UNLESS ASKED
+CONTACT_PHONE = "+264812086309"  # Keep for backend only
 CONTACT_EMAIL = "info@kahlel.co.za"
+HIDDEN_MODE = True  # Smart hybrid ON
+
+def should_reveal_contact(msg):
+    triggers = ["phone", "number", "contact", "call me", "email", "e-mail", "give me", "pop", "payment proof", "talk to human", "human", "agent", "reach you"]
+    return any(k in msg.lower() for k in triggers)
+
+REVEAL_TEXT = f"📞 You can reach Leon direct: {CONTACT_PHONE} / {CONTACT_EMAIL}\n📅 Or book: Use Talk to Human button - I'll connect you with transcript!"
+HIDE_TEXT = "👉 Want to Talk to Human? Click Talk to Human and I'll connect you to Leon live with full chat history! (Faster than calling)"
 RESERVE_LINK = "https://kahlelflix.com/products"
 
 # CAL.COM LINKS - PER SERVICE
@@ -30,56 +38,49 @@ IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"
 IMAGE_TRAVEL = "https://a.kwikweb.co.za/afrikatourstr/otherImages/images1.jpg"
 IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 
-WELCOME = """👉Welcome to Kahlel Group! 👋
-1️⃣ 🤖 Kahlel AI - Robots & AI Agents
-2️⃣ 🎬 Kahlel Flix - Movie Under The Stars
-3️⃣ ✈️ Afri-Ka Travel - Namibia Holidays
-4️⃣ 📺 Vivid Graphix - LED Screens
-
-Reply 1-4 | Type MENU | Type MEETING to book"""
-
 MENUS_TEXT = {
  "1": f"""🤖 Kahlel AI - We Build The Future
-Website: kahlel-ai.com
+We sell Alpha Robotics: AMY ALICE TIMO SNOW SCUD PANDA + Retell Voice AI Agents (FAQ bot -> Voice Agent).
+For hotels, airports, malls, warehouse. AI Consulting & WhatsApp bots.
 
-✅ AI Robots | Voice Agents | WhatsApp Bots | Automation
 Type DEMO + your business name.
-
 📅 Book Meeting: {CAL_LINKS['Kahlel AI']}
-Contact: {CONTACT_PHONE} / {CONTACT_EMAIL}
+{HIDE_TEXT}
 Reply Menu""",
  "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
-Book: {RESERVE_LINK}
+🍿 What's On? Check live schedule: https://kahlelflix.com/cp/38494/movie-schedule
 
 📦 Small N$1500 | Medium N$2500 | Large N$4000
-🎟️ Normal N$55 | Silver N$390= N$27.50 | VIP N$490= N$13.75
+🎟️ Normal N$55 | Silver N$390= N$27.50+popcorn | VIP N$490= N$13.75+best seats
+Book: {RESERVE_LINK}
 
 📅 Book Meeting: {CAL_LINKS['Kahlel Flix']}
-Contact: {CONTACT_PHONE} / Type SILVER / VIP""",
+{HIDE_TEXT}""",
  "3": f"""✈️ Afri-Ka Travel - See Namibia First! 🇳🇦
-Website: afri-katours.com
+afri-katours.com - Local Operator
+🌵 Sossusvlei Deadvlei | Swakopmund | Etosha | Twyfelfontein Himba | Fish River | KAZA
+FlyNamibia Partner: Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov). NEW: Windhoek-Maun Okavango & Windhoek-Vic Falls!
+Partners: Naturist Safaris SA (SunEden Kruger) + Surgical Bliss SA (Facelift Tummy Tuck Breast Rhinoplasty Mommy Makeover)
 
-🌵 Sossusvlei | Swakopmund | Etosha | Beach | Transfers N$150-350
+Send FROM-TO + Date + People
+📅 Book: {CAL_LINKS['GoGirl Afri-Ka Travel']}
+{HIDE_TEXT}""",
+ "4": f"""📺 Vivid Graphix - LED Specialists Windhoek
+1 Indoor P1.9 2 Outdoor P3.9 IP65 3 Stadium P8 4 Rental 3x4m with trusses signature 5 Shelf LED P1.8 COB 6 Transparent 70% 7 Gobo Projectors 40W-1500W 8 DRONE FLYING LED SCREEN - One drone carrying lightweight flexible mesh LED banner 0.6kg/sqm 1600 nits 360° 4x8m 5x10m sale & hire 9 Naked Eye 3D L-shaped
+Tell Indoor/Outdoor + Size?
 
-📅 Book Meeting: {CAL_LINKS['GoGirl Afri-Ka Travel']}
-Contact: {CONTACT_PHONE} / Send FROM-TO + Date""",
- "4": f"""📺 Vivid Graphix - LED Specialists
-Website: kahlel.co.za
-
-✅ Hire | Sales & Install | Repair all brands
-
-📅 Book Meeting: {CAL_LINKS['Vivid Graphix']}
-Contact: {CONTACT_PHONE} / Tell Indoor/Outdoor + Size?"""
+📅 Book: {CAL_LINKS['Vivid Graphix']}
+{HIDE_TEXT}"""
 }
 
 MENUS_IMAGE = {"1": IMAGE_AI, "2": IMAGE_FLIX, "3": IMAGE_TRAVEL, "4": IMAGE_LED}
 
 PROMPTS = {
- "Kahlel AI": f"ONLY Kahlel AI. Contact {CONTACT_PHONE} {CONTACT_EMAIL}. Cal {CAL_LINKS['Kahlel AI']}. ONLY AI Robots, Voice AI, WhatsApp Bots, Automation. NEVER mention Flix tickets, travel, LED. For DEMO ask business name. If meeting requested give Cal link.",
- "Kahlel Flix": f"ONLY Kahlel Flix. Contact {CONTACT_PHONE}. Book {RESERVE_LINK}. Cal {CAL_LINKS['Kahlel Flix']}. ONLY Movie Under Stars, packages N$1500/2500/4000, tickets N$55 Silver N$390 VIP N$490. NEVER mention robots, travel, LED.",
- "GoGirl Afri-Ka Travel": f"ONLY Afri-Ka Travel. Contact {CONTACT_PHONE}. Cal {CAL_LINKS['GoGirl Afri-Ka Travel']}. ONLY Namibia holidays Sossusvlei Etosha Swakopmund transfers N$150-350. NEVER mention Flix kahlelflix.com/products, LED, AI.",
- "Vivid Graphix": f"ONLY Vivid LED. Contact {CONTACT_PHONE} {CONTACT_EMAIL}. Cal {CAL_LINKS['Vivid Graphix']}. ONLY LED hire sales repair. NEVER mention Flix tickets travel robots. Use only {CONTACT_PHONE}.",
- "Kahlel Group": f"General helper. Contact {CONTACT_PHONE} {CONTACT_EMAIL}. Cal links: AI {CAL_LINKS['Kahlel AI']} etc. Ask 1-4. Do not mix. Never +27 12 345 678."
+ "Kahlel AI": f"ONLY Kahlel AI. You sell Alpha Robotics AMY Delivery ALICE TIMO Kiosk SNOW SCUD PANDA + Retell Voice AI. Hotels airports malls. For meeting give {CAL_LINKS['Kahlel AI']}. NEVER spam phone {CONTACT_PHONE} unless user asks phone/talk to human. Default say {HIDE_TEXT}. If user says outdoor/indoor alone it is NOT hiking it is LED context ignore. NEVER mention Flix tickets travel LED.",
+ "Kahlel Flix": f"ONLY Kahlel Flix. ONLY Movie Under Stars packages N$1500/2500/4000 tickets N$55 Silver N$390 VIP N$490. IMPORTANT Whats On: ALWAYS say 'Check live schedule https://kahlelflix.com/cp/38494/movie-schedule' friendly. Membership EFT: FNB Namibia Account Name Kahlel Flix Holder John Meinhert Acc 64279815319 Branch 282273 Ref Name+SILVER/VIP. After EFT tell send POP via Talk to Human button. Book {RESERVE_LINK} Cal {CAL_LINKS['Kahlel Flix']}. Default {HIDE_TEXT} reveal phone {CONTACT_PHONE} only if asked. NEVER mention robots travel LED.",
+ "GoGirl Afri-Ka Travel": f"ONLY Afri-Ka Travel. ONLY Namibia Sossusvlei Swakop Etosha + FlyNamibia Safari Circuit Westair since 1967 clockwise Windhoek Eros Sossusvlei Swakop Twyfelfontein Ongava Mokuti seasonal May-Nov min2 + NEW routes Windhoek-Maun Okavango Delta mokoro elephants + Windhoek-Vic Falls Smoke Thunders KAZA + Naturist Safaris partner SunEden Kruger Pilanesberg clothes-free at private pools clothed game drives + Medical Tourism partner Surgical Bliss SA Facelift Tummy Tuck Breast Augmentation Lift Rhinoplasty Blepharoplasty Mommy Makeover Liposuction packages Skype consultation before 1-3 quotations all-inclusive accommodation HPCSA APRSSA Cape Town MediClinic Come for Holiday go home fabulous + Fertility + His Her check-up. Contact reveal only if asked {CONTACT_PHONE}. Default {HIDE_TEXT}. NEVER mention Flix tickets LED AI. Cal {CAL_LINKS['GoGirl Afri-Ka Travel']}.",
+ "Vivid Graphix": f"ONLY Vivid LED. ONLY LED hire sales repair. CRITICAL outdoor indoor alone = LED SCREEN TYPE never hiking. Products: Indoor P1.9 P2.6 P3.9, Outdoor P3.9 P4.8 P6 P10 IP65 5500-10000 nits, Stadium P6.25 P8 P10 padded, Rental 3x4m Outdoor with trusses signature includes Novastar power tech, Shelf LED P1.8 COB 2cm GOB shockproof 300/600/900/1200x65mm, Transparent 65-75% glass P2.6 3000 nits P3.9 4500 nits 1000x1000mm 7kg, Gobo 40W-1500W IP65 5-800m 1600sqm custom glass logo QR, Drone Flying LED Screen NEW NOT swarm ONE drone carrying lightweight flexible mesh textile LED 0.6-1.35kg per sqm 70-75% transparent 1600-3600 nits IP65 360° modular 4x8m 5x10m 60+ mins 80000 RGB sale & hire with pilot permits viral for concerts launches advertising stadium weddings weight advantage 0.5-2kg vs 5-15kg setup minutes bendable 3D fast 30 min no cranes safe soft mesh, Naked Eye 3D L-shaped anamorphic P2.5-P10 6000-12000 nits. Contact reveal only if asked {CONTACT_PHONE} {CONTACT_EMAIL}. Default {HIDE_TEXT}. Cal {CAL_LINKS['Vivid Graphix']}.",
+ "Kahlel Group": f"General helper. Ask 1-4. Default say {HIDE_TEXT}. Reveal {CONTACT_PHONE} {CONTACT_EMAIL} only if user asks phone/number/talk to human. Cal links AI {CAL_LINKS['Kahlel AI']} etc. Outdoor bug fixed outdoor means LED type. Never +27 12 345 678."
 }
 
 def groq_reply(msg, last=None):
@@ -155,8 +156,16 @@ def webhook():
         mapping={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}; sm=mapping[low]; SESSION[sender]=sm; save_full(sender, sm, "", "", "", "", f"Pressed {low}", "Cold - Browsing"); send_image(sender, MENUS_IMAGE[low], MENUS_TEXT[low])
     elif low in ["hello","hi","menu","start","welcome"]:
         SESSION.pop(sender, None); send_text(sender, WELCOME)
-    else:
-        _, smart=groq_reply(msg, SESSION.get(sender)); send_text(sender, smart or WELCOME)
+        else:
+        _, smart=groq_reply(msg, SESSION.get(sender))
+        # SMART HYBRID: Add contact only if triggered
+        if should_reveal_contact(msg):
+            smart = (smart or "") + f"\n\n{REVEAL_TEXT}"
+        else:
+            # Ensure bot does NOT have phone if not asked - groq might still add, so strip? We rely on prompt but backup:
+            if CONTACT_PHONE in (smart or "") and not should_reveal_contact(msg):
+                smart = smart.replace(CONTACT_PHONE, "").replace(CONTACT_EMAIL, "") + f"\n\n{HIDE_TEXT}"
+        send_text(sender, smart or WELCOME)
     return jsonify({"status":"sent"}),200
 
 @app.route("/")
