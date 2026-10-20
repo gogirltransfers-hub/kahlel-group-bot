@@ -20,19 +20,18 @@ def should_reveal_contact(msg):
     triggers = ["phone", "number", "contact", "call me", "email", "e-mail", "give me", "pop", "payment proof", "talk to human", "human", "agent", "reach you"]
     return any(k in msg.lower() for k in triggers)
 
-# === TEXTS ===
+# === TEXTS V19.9.6 BOLD EDITION ===
 HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
 REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
 
-# FIXED CAL_LINKS + MENUS_TEXT
 CAL_LINKS = {
  "Kahlel AI": "https://cal.com/leon-feris-fvlga3/kahlel-ai-robots-and-voice-ai",
  "GoGirl Afri-Ka Travel": "https://cal.com/leon-feris-fvlga3/afri-ka-tours-coloboration-call",
- "Kahlel Travel": "https://cal.com/leon-feris-fvlga3/afri-ka-tours-coloboration-call", # ALIAS FIX
+ "Kahlel Travel": "https://cal.com/leon-feris-fvlga3/afri-ka-tours-coloboration-call",
  "Kahlel Flix": "https://cal.com/leon-feris-fvlga3/outdoor-cinema",
  "Vivid Graphix": "https://cal.com/leon-feris-fvlga3/led-displays",
- "Vivid Display": "https://cal.com/leon-feris-fvlga3/led-displays", # ALIAS FIX
+ "Vivid Display": "https://cal.com/leon-feris-fvlga3/led-displays",
  "Kahlel Group": "https://cal.com/leon-feris-fvlga3/kahlel-ai-robots-and-voice-ai"
 }
 
@@ -41,46 +40,46 @@ IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"
 IMAGE_TRAVEL = "https://a.kwikweb.co.za/afrikatourstr/otherImages/images1.jpg"
 IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 
-WELCOME = """👉Welcome to Kahlel Group! 👋
-1️⃣ 🤖 Kahlel AI - Robots & AI Agents
-2️⃣ 🎬 Kahlel Flix - Movie Under The Stars
-3️⃣ ✈️ Afri-Ka Travel - Namibia Holidays
-4️⃣ 📺 Vivid Graphix - LED Screens
+WELCOME = """👉 *Welcome to Kahlel Group!* 👋
+1️⃣ 🤖 *Kahlel AI* - Robots & AI Agents
+2️⃣ 🎬 *Kahlel Flix* - Movie Under The Stars
+3️⃣ ✈️ *Afri-Ka Travel* - Namibia Holidays
+4️⃣ 📺 *Vivid Graphix* - LED Screens
 
-Reply 1-4 | Type MENU | Type TALK TO HUMAN for Leon
+Reply 1-4 | Type *MENU* | Type *TALK TO HUMAN* for Leon
 Reply MEETING to book"""
 
 MENUS_TEXT = {
- "1": f"""🤖 Kahlel AI - Robots & Voice Agents
+ "1": f"""*🤖 Kahlel AI - Robots & Voice Agents*
 🌐 www.kahlel-ai.com
 🤖 Service Robots: Hotel, Restaurant, Cleaning
-🗣️ Voice AI: Inbound/Outbound, 24/7, Multilingual
+🗣️ *Voice AI:* Inbound/Outbound, 24/7, Multilingual
 💼 Demo & Pricing
-📅 Book Meeting: {CAL_LINKS['Kahlel AI']}
+📅 *Book Meeting:* {CAL_LINKS['Kahlel AI']}
 {HIDE_TEXT}""",
 
- "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
+ "2": f"""*🎬 Kahlel Flix - Movie Under The Stars* ✨
 🍿 What's On? Check live: https://kahlelflix.com/cp/38494/movie-schedule
-🎟️ Normal Ticket N$55 | 🥈 Silver N$390/y = N$27.50 + FREE popcorn | 👑 VIP N$490/y = N$13.75 + popcorn & soda + best seats
+🎟️ Normal Ticket *N$55* | 🥈 Silver *N$390/y = N$27.50 + FREE popcorn* | 👑 VIP *N$490/y = N$13.75 + popcorn & soda + best seats*
 Book: {RESERVE_LINK}
-📅 Book Meeting: {CAL_LINKS['Kahlel Flix']}
+📅 *Book Meeting:* {CAL_LINKS['Kahlel Flix']}
 {HIDE_TEXT}""",
 
- "3": f"""🌵 Namibia Safaris & Beyond - Kahlel Travel
+ "3": f"""*🌵 Namibia Safaris & Beyond - Kahlel Travel*
 👉🌵 Sossusvlei Deadvlei | Swakopmund | Etosha | Twyfelfontein Himba | KAZA
-✈️ FlyNamibia Partner: Skip Long Drives, Explore Namibia BY AIR! Fly: Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov)
+*✈️ FlyNamibia Partner:* Skip Long Drives, Explore Namibia BY AIR! Fly: Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov)
 🆕 NEW: Windhoek-Maun Okavango & Windhoek-Vic Falls!
-👉🤝 Naturist and Cosmetic Safaris SA - Facelift, Tummy Tuck, Breast, Rhinoplasty, Mommy Makeover
-📅 Book Meeting: {CAL_LINKS['Kahlel Travel']}
-Book: {RESERVE_LINK}
+👉🤝 *Naturist and Cosmetic Safaris SA* - Facelift, Tummy Tuck, Breast, Rhinoplasty, Mommy Makeover
+🌐 www.afri-katours.com
+📅 *Book Meeting:* {CAL_LINKS['Kahlel Travel']}
 {HIDE_TEXT}""",
 
- "4": f"""📺 Vivid Graphix - LED Specialists Windhoek, Namibia
+ "4": f"""*📺 Vivid Graphix - LED Specialists Windhoek, Namibia*
 🌐 kahlel.co.za
 👉 Indoor P1.9 | Outdoor P3.9 IP65 | Stadium P8 | Rental 3x4m + Trusses
-👉 Shelf P1.8 COB | Transparent LED | Gobo | Naked Eye 3D Any Size/Shape
-🚁 DRONE FLYING LED Banner 0.6kg/sqm 1600nits 360° 4x8m 5x10m - Sale & Hire!
-📅 Book Meeting: {CAL_LINKS['Vivid Display']}
+👉 Shelf P1.8 COB | Transparent LED | Gobo | *Naked Eye 3D Any Size/Shape*
+🚁 *DRONE FLYING LED Banner* 0.6kg/sqm 1600nits 360° 4x8m 5x10m - Sale & Hire!
+📅 *Book Meeting:* {CAL_LINKS['Vivid Display']}
 {HIDE_TEXT}""",
 }
 
