@@ -20,6 +20,7 @@ def should_reveal_contact(msg):
     triggers = ["phone", "number", "contact", "call me", "email", "e-mail", "give me", "pop", "payment proof", "talk to human", "human", "agent", "reach you"]
     return any(k in msg.lower() for k in triggers)
 
+# === TEXTS ===
 HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
 REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
@@ -47,32 +48,37 @@ Reply 1-4 | Type MENU | Type TALK TO HUMAN for Leon
 Reply MEETING to book"""
 
 MENUS_TEXT = {
- "1": f"""🤖 Kahlel AI - We Build The Future
-We sell Alpha Robotics: AMY ALICE TIMO SNOW SCUD PANDA + Retell Voice AI Agents.
-For hotels, airports, malls, warehouse. AI Consulting & WhatsApp bots.
-Type DEMO + your business name.
+ "1": f"""🤖 Kahlel AI - Robots & Voice Agents
+🌐 www.kahlel-ai.com
+🤖 Service Robots: Hotel, Restaurant, Cleaning
+🗣️ Voice AI: Inbound/Outbound, 24/7, Multilingual
+💼 Demo & Pricing
 📅 Book Meeting: {CAL_LINKS['Kahlel AI']}
-{HIDE_TEXT}
-Reply Menu""",
-  "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
+{HIDE_TEXT}""",
+
+ "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
 🍿 What's On? Check live: https://kahlelflix.com/cp/38494/movie-schedule
 🎟️ Normal Ticket N$55 | 🥈 Silver N$390/y = N$27.50 + FREE popcorn | 👑 VIP N$490/y = N$13.75 + popcorn & soda + best seats
 Book: {RESERVE_LINK}
 📅 Book Meeting: {CAL_LINKS['Kahlel Flix']}
 {HIDE_TEXT}""",
- "3": f"""✈️ Afri-Ka Travel - See Namibia First! 🇳🇦
-afri-katours.com
-🌵 Sossusvlei Deadvlei | Swakopmund | Etosha | Twyfelfontein Himba | KAZA
-FlyNamibia Partner: Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov). NEW: Windhoek-Maun Okavango & Windhoek-Vic Falls!
-Partners: Naturist Safaris SA + Surgical Bliss SA Facelift Tummy Tuck Breast Rhinoplasty Mommy Makeover
-Send FROM-TO + Date + People
-📅 Book: {CAL_LINKS['GoGirl Afri-Ka Travel']}
+
+ "3": f"""🌵 Namibia Safaris & Beyond - Kahlel Travel
+👉🌵 Sossusvlei Deadvlei | Swakopmund | Etosha | Twyfelfontein Himba | KAZA
+✈️ FlyNamibia Partner: Skip Long Drives, Explore Namibia BY AIR! Fly: Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov)
+🆕 NEW: Windhoek-Maun Okavango & Windhoek-Vic Falls!
+👉🤝 Naturist and Cosmetic Safaris SA - Facelift, Tummy Tuck, Breast, Rhinoplasty, Mommy Makeover
+📅 Book Meeting: {CAL_LINKS['Kahlel Travel']}
+Book: {RESERVE_LINK}
 {HIDE_TEXT}""",
- "4": f"""📺 Vivid Graphix - LED Specialists Windhoek
-1 Indoor P1.9 2 Outdoor P3.9 IP65 3 Stadium P8 4 Rental 3x4m with trusses signature 5 Shelf LED P1.8 COB 6 Transparent 70% 7 Gobo 40W-1500W 8 DRONE FLYING LED - One drone lightweight flexible mesh LED banner 0.6kg/sqm 1600 nits 360° 4x8m 5x10m sale & hire 9 Naked Eye 3D L-shaped
-Tell Indoor/Outdoor + Size?
-📅 Book: {CAL_LINKS['Vivid Graphix']}
-{HIDE_TEXT}"""
+
+ "4": f"""📺 Vivid Graphix - LED Specialists Windhoek, Namibia
+🌐 kahlel.co.za
+👉 Indoor P1.9 | Outdoor P3.9 IP65 | Stadium P8 | Rental 3x4m + Trusses
+👉 Shelf P1.8 COB | Transparent LED | Gobo | Naked Eye 3D Any Size/Shape
+🚁 DRONE FLYING LED Banner 0.6kg/sqm 1600nits 360° 4x8m 5x10m - Sale & Hire!
+📅 Book Meeting: {CAL_LINKS['Vivid Display']}
+{HIDE_TEXT}""",
 }
 
 MENUS_IMAGE = {"1": IMAGE_AI, "2": IMAGE_FLIX, "3": IMAGE_TRAVEL, "4": IMAGE_LED}
