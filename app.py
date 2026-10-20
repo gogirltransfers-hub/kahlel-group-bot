@@ -11,7 +11,6 @@ def log(m): print(m, flush=True)
 SESSION = {}
 MODELS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "llama-3.1-8b-instant"]
 
-# V19.9 SMART HYBRID - CONTACTS HIDDEN UNLESS ASKED
 CONTACT_PHONE = "+264812086309"
 CONTACT_EMAIL = "info@kahlel.co.za"
 HIDDEN_MODE = True
@@ -20,7 +19,6 @@ def should_reveal_contact(msg):
     triggers = ["phone", "number", "contact", "call me", "email", "e-mail", "give me", "pop", "payment proof", "talk to human", "human", "agent", "reach you"]
     return any(k in msg.lower() for k in triggers)
 
-# === TEXTS V19.9.6 BOLD EDITION ===
 HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
 REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
@@ -87,7 +85,7 @@ MENUS_IMAGE = {"1": IMAGE_AI, "2": IMAGE_FLIX, "3": IMAGE_TRAVEL, "4": IMAGE_LED
 
 PROMPTS = {
  "Kahlel AI": f"ONLY Kahlel AI. Sell Alpha Robotics AMY ALICE TIMO SNOW SCUD PANDA + Retell Voice. Hotels airports malls. Meeting {CAL_LINKS['Kahlel AI']}. Default {HIDE_TEXT}. Reveal phone {CONTACT_PHONE} only if user asks phone. Outdoor word = LED type not hiking. Never mention Flix travel LED.",
- "Kahlel Flix": f"ONLY Kahlel Flix. Movie Under Stars packages 1500/2500/4000 tickets 55 Silver 390 VIP 490. Whats On always say check https://kahlelflix.com/cp/38494/movie-schedule friendly. EFT FNB Name Kahlel Flix Holder John Meinhert Acc 64279815319 Branch 282273 Ref Name+Plan. Send POP via Talk to Human. Book {RESERVE_LINK}. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asked.",
+ "Kahlel Flix": f"ONLY Kahlel Flix - Movie Under The Stars. CRITICAL: We have ONLY 2 PACKAGES now: (1) 55 Silver = R390/year for 55 tickets at N$27.50 each + FREE popcorn every movie, save N$3,120/year. (2) 55 VIP = R490/year for 55 tickets at N$13.75 each + popcorn & soda + best seats, save N$8,415/year. Normal ticket N$55. DO NOT mention 1500, 2500, 4000 - those packages are DISCONTINUED and OUT. Whats On always say check https://kahlelflix.com/cp/38494/movie-schedule friendly. EFT FNB Name Kahlel Flix Holder John Meinhert Acc 64279815319 Branch 282273 Ref Name+Plan. Send POP via Talk to Human. Book {RESERVE_LINK}. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asked.",
  "GoGirl Afri-Ka Travel": f"ONLY Afri-Ka Travel. Namibia Sossusvlei Swakop Etosha + FlyNamibia circuit Windhoek Eros Sossusvlei Swakop Twyfelfontein Ongava Mokuti May-Nov min2 Westair + new Windhoek-Maun Okavango + Windhoek-Vic Falls + Naturist SunEden Kruger clothes-free private + Medical Tourism Facelift Tummy Tuck Breast Rhinoplasty Mommy Makeover Skype all-inclusive HPCSA. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asked. Cal {CAL_LINKS['GoGirl Afri-Ka Travel']}.",
  "Vivid Graphix": f"ONLY Vivid LED. LED hire sales repair. Outdoor indoor alone = LED TYPE never hiking. Products Indoor Outdoor Stadium Rental 3x4m truss Shelf COB Transparent 70% Gobo 40W-1500W Drone Flying LED one drone lightweight mesh 0.6kg/sqm 1600 nits 4x8m 5x10m sale hire pilot Naked Eye 3D L-shaped. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asked. Cal {CAL_LINKS['Vivid Graphix']}.",
  "Kahlel Group": f"General helper Ask 1-4. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asks phone. Outdoor means LED type. Never +27 12 345 678."
@@ -132,7 +130,7 @@ def send_image(to, image_url, caption):
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return f"V19.9 SMART HYBRID {RESERVE_LINK}",200
+    if request.method=="GET": return f"V19.9.7 FIXED PACKAGES {RESERVE_LINK}",200
     raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
     sender=""; msg=""
     if "event_content" in data:
@@ -178,7 +176,7 @@ def webhook():
     return jsonify({"status":"sent"}),200
 
 @app.route("/")
-def home(): return f"V19.9 SMART HYBRID READY {CONTACT_PHONE}"
+def home(): return f"V19.9.7 FIXED READY {CONTACT_PHONE}"
 @app.route("/health")
 def health(): return jsonify({"model":MODELS[0],"contact":CONTACT_PHONE,"cal":CAL_LINKS})
 
