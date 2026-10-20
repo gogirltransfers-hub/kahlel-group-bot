@@ -20,8 +20,8 @@ def should_reveal_contact(msg):
     triggers = ["phone", "number", "contact", "call me", "email", "e-mail", "give me", "pop", "payment proof", "talk to human", "human", "agent", "reach you"]
     return any(k in msg.lower() for k in triggers)
 
-REVEAL_TEXT = f"📞 Reach Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}\n📅 Book: Talk to Human button - I'll connect with transcript!"
-HIDE_TEXT = "👉 Want to Talk to Human? Click Talk to Human and I'll connect you to Leon live with full chat history!"
+HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
+REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}\n📅 Or TYPE 'Talk to Human' - I'll connect live!"
 RESERVE_LINK = "https://kahlelflix.com/products"
 
 CAL_LINKS = {
@@ -54,10 +54,9 @@ Type DEMO + your business name.
 📅 Book Meeting: {CAL_LINKS['Kahlel AI']}
 {HIDE_TEXT}
 Reply Menu""",
- "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
+  "2": f"""🎬 Kahlel Flix - Movie Under The Stars ✨
 🍿 What's On? Check live: https://kahlelflix.com/cp/38494/movie-schedule
-📦 Small N$1500 | Medium N$2500 | Large N$4000
-🎟️ Normal N$55 | Silver N$390= N$27.50+popcorn | VIP N$490= N$13.75+best seats
+🎟️ Normal Ticket N$55 | 🥈 Silver N$390/y = N$27.50 + FREE popcorn | 👑 VIP N$490/y = N$13.75 + popcorn & soda + best seats
 Book: {RESERVE_LINK}
 📅 Book Meeting: {CAL_LINKS['Kahlel Flix']}
 {HIDE_TEXT}""",
