@@ -28,6 +28,8 @@ def clean_whatsapp_text(t):
 HIDE_TEXT = "👉 Want to Talk to Human? Just TYPE 'Talk to Human' and I'll connect you to Leon live!"
 REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
 RESERVE_LINK = "https://kahlelflix.com/products"
+MEMBERSHIP_LINK = "https://kahlelflix.com/p/1065605/kahlel-flix-membership"
+SCHEDULE_LINK = "https://kahlelflix.com/cp/38494/movie-schedule"
 
 CAL_LINKS = {
  "Kahlel AI": "https://cal.com/leon-feris-fvlga3/kahlel-ai-robots-and-voice-ai",
@@ -40,10 +42,11 @@ CAL_LINKS = {
 }
 
 IMAGE_AI = "https://kahlelwebdesign.co.za/otherImages/Robot2.png"
-IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"
+IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"  # Keep your image - will show clean text with it
 IMAGE_TRAVEL = "https://a.kwikweb.co.za/afrikatourstr/otherImages/images1.jpg"
 IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 
+# ========== V20.4 WELCOME (FB Ad -> Menu First WITH Header) ==========
 WELCOME = """👉 *Welcome to Kahlel Group!* 👋
 1️⃣ 🤖 *Kahlel AI* - Robots & AI Agents
 2️⃣ 🎬 *Kahlel Flix* - Movie Under The Stars
@@ -53,6 +56,26 @@ WELCOME = """👉 *Welcome to Kahlel Group!* 👋
 Reply 1-4 | Type *MENU* | Type *TALK TO HUMAN* for Leon
 Reply MEETING to book"""
 
+# ========== V20.4 FLIX CLEAN MESSAGE (NO Reply 1-4 Header + Image) ==========
+FLIX_CLEAN = f"""🎬 *Kahlel Flix - Windhoek's ONLY Outdoor Cinema!* ✨
+
+💎 *Membership Package:*
+- *Silver* - FREE popcorn + 50% discount (Only N$27.50!)
+- *VIP* - FREE popcorn & FREE soda, best seats + 75% discount (Only N$13.75!)
+- *Normal* - N$55 per ticket
+
+👉 *Here’s how you can become a member and/or book your tickets:*
+1️⃣ *Become a Member:*
+{MEMBERSHIP_LINK}
+
+2️⃣ *Book Tickets:*
+{RESERVE_LINK}
+
+3️⃣ *Movie Schedule:*
+{SCHEDULE_LINK}
+
+👉 Type *Talk to Human* to connect to Leon live! 🍿"""
+
 MENUS_TEXT = {
  "1": f"""*🤖 Kahlel AI - Robots & Voice Agents*
 🌐 www.kahlel-ai.com
@@ -61,12 +84,7 @@ MENUS_TEXT = {
 💼 Demo & Pricing
 📅 *Book Meeting:* {CAL_LINKS['Kahlel AI']}
 {HIDE_TEXT}""",
- "2": f"""*🎬 Kahlel Flix - Movie Under The Stars* ✨
-🍿 What's On? https://kahlelflix.com/cp/38494/movie-schedule
-🎟️ Normal N$55 | 🥈 Silver R390/y N$27.50 FREE popcorn | 👑 VIP R490/y N$13.75 popcorn soda best seats
-Book: {RESERVE_LINK}
-📅 *Book Meeting:* {CAL_LINKS['Kahlel Flix']}
-{HIDE_TEXT}""",
+ "2": FLIX_CLEAN,  # V20.4 CLEAN VERSION
  "3": f"""*🌵 Namibia Safaris & Beyond - Kahlel Travel*
 Sossusvlei Deadvlei | Swakopmund | Etosha | Twyfelfontein Himba | KAZA
 *FlyNamibia Partner:* Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti > Windhoek (May-Nov)
@@ -88,7 +106,7 @@ BANNED = "CRITICAL: NEVER mention cleaning services, house cleaning, maintenance
 
 PROMPTS = {
  "Kahlel AI": f"{BANNED} You are Kahlel AI ONLY. Robots AMY ALICE TIMO SNOW + Retell Voice AI. Meeting {CAL_LINKS['Kahlel AI']}. Default {HIDE_TEXT}. Reveal {CONTACT_PHONE} only if asked. Plain URLs only.",
- "Kahlel Flix": f"{BANNED} You are Kahlel Flix ONLY. 2 PACKAGES ONLY: Silver R390/y 55 tickets N$27.50 free popcorn, VIP R490/y 55 tickets N$13.75 popcorn soda best seats. Normal N$55. Schedule https://kahlelflix.com/cp/38494/movie-schedule Booking https://kahlelflix.com/products. Plain URLs only. Default {HIDE_TEXT}.",
+ "Kahlel Flix": f"{BANNED} You are Kahlel Flix ONLY. 2 PACKAGES ONLY: Silver 50% discount N$27.50 free popcorn, VIP 75% discount N$13.75 popcorn soda best seats. Normal N$55. Membership {MEMBERSHIP_LINK} Schedule {SCHEDULE_LINK} Booking {RESERVE_LINK}. Plain URLs only. Default {HIDE_TEXT}.",
  "GoGirl Afri-Ka Travel": f"{BANNED} You are GoGirl Afri-Ka Travel ONLY. FlyNamibia Circuit Windhoek Eros > Sossusvlei > Swakop > Twyfelfontein > Ongava > Mokuti May-Nov + Windhoek-Maun + Windhoek-Vic Falls + Classic 9 days. Plain URLs only. Cal {CAL_LINKS['GoGirl Afri-Ka Travel']}. Default {HIDE_TEXT}.",
  "Vivid Graphix": f"{BANNED} You are Vivid Graphix LED ONLY. Indoor P1.9 Outdoor P3.9 IP65 Stadium P8 Rental 3x4m Transparent Drone Flying LED. Plain URLs only. Cal {CAL_LINKS['Vivid Graphix']}. Default {HIDE_TEXT}.",
  "Kahlel Group": f"{BANNED} You are Kahlel Group helper. ONLY show menu: 1 AI 2 Flix 3 Travel 4 LED. Never invent services. Default {HIDE_TEXT}."
@@ -100,7 +118,7 @@ def groq_reply(msg, last=None):
         service = last
     else:
         service="Kahlel Group"
-        if any(k in low for k in ["flix", "movie", "silver", "vip", "cinema"]): service="Kahlel Flix"
+        if any(k in low for k in ["flix", "movie", "silver", "vip", "cinema", "popcorn", "discount", "price"]): service="Kahlel Flix"
         elif any(k in low for k in ["ai", "robot", "voice agent", "demo"]): service="Kahlel AI"
         elif any(k in low for k in ["travel","afri-ka","afri ka","holiday","namibia","sossusvlei","etosha","swakop","flynamibia","safari","maun","vic falls"]): service="GoGirl Afri-Ka Travel"
         elif any(k in low for k in ["vivid", "led", "display", "screen", "gobo", "drone banner"]): service="Vivid Graphix"
@@ -139,9 +157,12 @@ def send_image(to, image_url, caption):
         if r.status_code != 200: send_text(to, f"{caption}")
     except: send_text(to, f"{caption}")
 
+# ========== V20.4 TRIGGERS ==========
+FLIX_DETAILED_TRIGGERS = ["movie", "flix", "cinema", "silver", "vip", "membership", "popcorn", "discount", "price", "cost", "how much", "rate", "ticket", "show", "film"]
+
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return f"V20.3 FB=Menu {RESERVE_LINK}",200
+    if request.method=="GET": return f"V20.4 FB=Menu Flix=Clean {RESERVE_LINK}",200
     raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
     sender=""; msg=""
     if "event_content" in data:
@@ -161,8 +182,7 @@ def webhook():
     raw_low = raw.lower()
     log(f"MSG {sender}: {msg} | RAW {raw_low[:600]}")
 
-    # ===== V20.3 - FACEBOOK AD CLICK = ALWAYS SHOW MENU =====
-    # Facebook always sends "Hello! Can I get more info on this?" with fb.me / ad image
+    # ===== V20.4 - FACEBOOK AD CLICK = ALWAYS SHOW MENU =====
     is_fb_ad_click = (
         "can i get more info on this" in low or
         "fb.me" in raw_low or
@@ -173,18 +193,29 @@ def webhook():
     )
     if is_fb_ad_click:
         log(f"✅ FB AD CLICK DETECTED -> Send WELCOME MENU")
-        SESSION.pop(sender, None)  # Clear session so menu shows
+        SESSION.pop(sender, None)
         save_full(sender, "Facebook Ad Click - AfriKa", "", "", "", "", msg, "Facebook Ad Lead")
         send_text(sender, WELCOME)
         return jsonify({"status":"fb_menu_sent"}),200
+
+    # ===== V20.4 - FLIX CLEAN FLOW (2, MOVIE, PRICE, POPCORN etc) -> IMAGE + CLEAN TEXT (NO HEADER) =====
+    if low == "2" or any(k in low for k in FLIX_DETAILED_TRIGGERS):
+        # If they are already in other service and say "price", let package logic handle elsewhere? 
+        # But for Flix, we prioritize CLEAN screen when trigger is flix-related
+        if low == "2" or any(k in low for k in ["movie","flix","cinema","silver","vip","membership","popcorn","discount","price","cost","show"]):
+            log(f"✅ FLIX CLEAN TRIGGER -> Send Image + Clean Text")
+            SESSION[sender]="Kahlel Flix"
+            save_full(sender, "Kahlel Flix - Clean V20.4", "", "", "", "", msg, "HOT - Flix")
+            send_image(sender, IMAGE_FLIX, FLIX_CLEAN)
+            return jsonify({"status":"flix_clean_sent"}),200
 
     if any(k in low for k in ["book meeting","appointment","book a meeting","book call","cal.com","consultation","meeting","schedule call","meet you","speak to leon"]):
         service = SESSION.get(sender, "Kahlel Group"); cal_link = CAL_LINKS.get(service, CAL_LINKS["Kahlel Group"]); save_full(sender, service+" - WANTS MEETING", "", "", "", "", msg, lead_type="HOT - Wants Meeting"); send_text(sender, f"📅 Let's meet! Book here:\n👉 {cal_link}\nFor {service}\n{HIDE_TEXT if not should_reveal_contact(msg) else REVEAL_TEXT}"); return jsonify({"status":"sent"}),200
 
     if any(k in low for k in ["reserve ticket","book ticket","booking link"]):
-        SESSION[sender]="Kahlel Flix"; save_full(sender, "Kahlel Flix - Reserve", "", "", "", "", msg, "HOT - Reserve"); send_image(sender, IMAGE_FLIX, f"🎟️ Reserve in 30 sec! 👇\nBook: {RESERVE_LINK}\n📅 Meet: {CAL_LINKS['Kahlel Flix']}\n{HIDE_TEXT}"); return jsonify({"status":"sent"}),200
+        SESSION[sender]="Kahlel Flix"; save_full(sender, "Kahlel Flix - Reserve", "", "", "", "", msg, "HOT - Reserve"); send_image(sender, IMAGE_FLIX, FLIX_CLEAN); return jsonify({"status":"sent"}),200
 
-    if any(k in low for k in ["package","packages","price","pricing","how much","rate","rates","cost"]):
+    if any(k in low for k in ["package","packages","pricing","rate","rates"]):
         current_service = SESSION.get(sender, "Kahlel Group")
         if current_service == "GoGirl Afri-Ka Travel":
             send_text(sender, f"🌵 *Afri-Ka Tours - Packages* ✈️\nFlyNamibia Circuit + Classic 9 Days + KAZA + Medical\n🌐 www.afri-katours.com\n📅 {CAL_LINKS['GoGirl Afri-Ka Travel']}\n{HIDE_TEXT}"); return jsonify({"status":"sent"}),200
@@ -193,7 +224,7 @@ def webhook():
         elif current_service == "Kahlel AI":
             send_text(sender, f"🤖 *Kahlel AI - Packages* Robots: AMY, ALICE, TIMO Voice AI 24/7 📅 {CAL_LINKS['Kahlel AI']} {HIDE_TEXT}"); return jsonify({"status":"sent"}),200
         else:
-            send_text(sender, f"🎬 *Kahlel Flix - Packages (Only 2)* ✨\n🥈 Silver R390/y 55 tix N$27.50 FREE popcorn\n👑 VIP R490/y 55 tix N$13.75 popcorn soda best seats\n🎟️ Normal N$55\nBook: {RESERVE_LINK}\n{HIDE_TEXT}"); return jsonify({"status":"sent"}),200
+            send_image(sender, IMAGE_FLIX, FLIX_CLEAN); return jsonify({"status":"sent"}),200
 
     MONTHS=["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]; has_month=any(x in low for x in MONTHS)
     is_booking=len(msg.split())>=2 and (has_month or any(k in low for k in ["book","tomorrow","today","name","from","people","am","pm","airport","demo"]) or SESSION.get(sender))
@@ -215,8 +246,8 @@ def webhook():
     return jsonify({"status":"sent"}),200
 
 @app.route("/")
-def home(): return f"V20.3 FB->MENU READY {CONTACT_PHONE}"
+def home(): return f"V20.4 FB->MENU FLIX->CLEAN READY {CONTACT_PHONE}"
 @app.route("/health")
-def health(): return jsonify({"model":MODELS[0],"contact":CONTACT_PHONE,"cal":CAL_LINKS})
+def health(): return jsonify({"model":MODELS[0],"contact":CONTACT_PHONE,"cal":CAL_LINKS, "version":"V20.4"})
 
 if __name__=="__main__": app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
