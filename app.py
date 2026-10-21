@@ -46,7 +46,6 @@ IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"
 IMAGE_TRAVEL = "https://a.kwikweb.co.za/afrikatourstr/otherImages/images1.jpg"
 IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 
-# ===== V20.6 WELCOME - REMOVED "Reply MEETING to book" =====
 WELCOME = """👉 *Welcome to Kahlel Group!* 👋
 1️⃣ 🤖 *Kahlel AI* - Robots & AI Agents
 2️⃣ 🎬 *Kahlel Flix* - Movie Under The Stars
@@ -99,12 +98,7 @@ AI_CLEAN = f"""*🤖 Kahlel AI - Robots & Voice Agents*
 📅 *Book Meeting:* {CAL_LINKS['Kahlel AI']}
 👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live!"""
 
-MENUS_TEXT = {
- "1": AI_CLEAN,
- "2": FLIX_CLEAN,
- "3": TRAVEL_CLEAN,
- "4": VIVID_CLEAN,
-}
+MENUS_TEXT = {"1": AI_CLEAN, "2": FLIX_CLEAN, "3": TRAVEL_CLEAN, "4": VIVID_CLEAN}
 MENUS_IMAGE = {"1": IMAGE_AI, "2": IMAGE_FLIX, "3": IMAGE_TRAVEL, "4": IMAGE_LED}
 
 BANNED = "CRITICAL: NEVER mention cleaning services, house cleaning, maintenance, janitorial. Kahlel Group DOES NOT OFFER cleaning. ONLY 4 services: 1) Kahlel AI Robots & Voice AI 2) Kahlel Flix Movie Under Stars 3) Afri-Ka Travel Namibia 4) Vivid Graphix LED. If unsure show MENU 1-4."
@@ -118,8 +112,7 @@ PROMPTS = {
 
 def groq_reply(msg, last=None):
     low=msg.lower()
-    if last and last != "Kahlel Group":
-        service = last
+    if last and last != "Kahlel Group": service = last
     else:
         service="Kahlel Group"
         if any(k in low for k in ["flix", "movie", "silver", "vip", "cinema", "popcorn", "discount", "price"]): service="Kahlel Flix"
@@ -146,8 +139,7 @@ def save_full(phone, service, name, date, location, people, message, lead_type="
 
 def send_text(to, text):
     try:
-        text=clean_whatsapp_text(text)
-        to_clean="+"+str(to).strip().lstrip("+"); url="https://api.d7networks.com/whatsapp/v2/send"; headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
+        text=clean_whatsapp_text(text); to_clean="+"+str(to).strip().lstrip("+"); url="https://api.d7networks.com/whatsapp/v2/send"; headers={"Authorization": f"Bearer {D7_API_TOKEN}", "Content-Type":"application/json"}
         payload={"messages":[{"originator":D7_NUMBER,"content":{"message_type":"TEXT","text":{"body":text[:1000]}},"recipients":[{"recipient":to_clean,"recipient_type":"individual"}]}]}
         requests.post(url, headers=headers, json=payload, timeout=15)
     except: pass
@@ -165,7 +157,7 @@ FLIX_DETAILED_TRIGGERS = ["movie", "flix", "cinema", "silver", "vip", "membershi
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
-    if request.method=="GET": return f"V20.6 CLEAN WELCOME FB=Menu RANDOM=Menu {RESERVE_LINK}",200
+    if request.method=="GET": return f"V20.7 MEETING PREVIEW FIX {RESERVE_LINK}",200
     raw=request.get_data(as_text=True); data=json.loads(raw) if raw else {}
     sender=""; msg=""
     if "event_content" in data:
@@ -181,57 +173,41 @@ def webhook():
         except: pass
     if not sender or not msg: return jsonify({"status":"ignored"}),200
 
-    sender="+"+str(sender).strip().lstrip("+"); low=msg.lower().strip()
-    raw_low = raw.lower()
+    sender="+"+str(sender).strip().lstrip("+"); low=msg.lower().strip(); raw_low = raw.lower()
     log(f"MSG {sender}: {msg} | RAW {raw_low[:600]}")
 
-    is_fb_ad_click = (
-        "can i get more info on this" in low or
-        "fb.me" in raw_low or
-        "skip long drives" in raw_low or
-        "explore namibia by air" in raw_low or
-        "afri-ka tours & travel" in raw_low or
-        "afri-katours.com" in raw_low
-    )
+    is_fb_ad_click = ("can i get more info on this" in low or "fb.me" in raw_low or "skip long drives" in raw_low or "explore namibia by air" in raw_low or "afri-ka tours & travel" in raw_low or "afri-katours.com" in raw_low)
     if is_fb_ad_click:
-        SESSION.pop(sender, None)
-        save_full(sender, "Facebook Ad Click - AfriKa", "", "", "", "", msg, "Facebook Ad Lead")
-        send_text(sender, WELCOME)
-        return jsonify({"status":"fb_menu_sent"}),200
+        SESSION.pop(sender, None); save_full(sender, "Facebook Ad Click - AfriKa", "", "", "", "", msg, "Facebook Ad Lead"); send_text(sender, WELCOME); return jsonify({"status":"fb_menu_sent"}),200
 
     if low == "2" or any(k in low for k in FLIX_DETAILED_TRIGGERS):
         if low == "2" or any(k in low for k in ["movie","flix","cinema","silver","vip","membership","popcorn","discount","price","cost","show"]):
-            SESSION[sender]="Kahlel Flix"
-            save_full(sender, "Kahlel Flix - Clean V20.6", "", "", "", "", msg, "HOT - Flix")
-            send_image(sender, IMAGE_FLIX, FLIX_CLEAN)
-            return jsonify({"status":"flix_clean_sent"}),200
+            SESSION[sender]="Kahlel Flix"; save_full(sender, "Kahlel Flix - Clean V20.7", "", "", "", "", msg, "HOT - Flix"); send_image(sender, IMAGE_FLIX, FLIX_CLEAN); return jsonify({"status":"flix_clean_sent"}),200
 
-    # ===== V20.6 MEETING LOGIC - ALL LINKS IF NO SERVICE =====
+    # ===== V20.7 MEETING LOGIC - FIXED PREVIEW OVERLAP =====
     if any(k in low for k in ["book meeting","appointment","book a meeting","book call","cal.com","consultation","meeting","schedule call","meet you","speak to leon"]):
         service = SESSION.get(sender, None)
         if not service or service == "Kahlel Group" or "Random" in str(service):
             all_links = f"""📅 *Book a Meeting with Leon:*
 
-🤖 *Kahlel AI Robots:*
+1️⃣ 🤖 *Kahlel AI Robots:*
 {CAL_LINKS['Kahlel AI']}
 
-🎬 *Kahlel Flix Cinema:*
+2️⃣ 🎬 *Kahlel Flix Cinema:*
 {CAL_LINKS['Kahlel Flix']}
 
-✈️ *Afri-Ka Travel:*
+3️⃣ ✈️ *Afri-Ka Travel:*
 {CAL_LINKS['GoGirl Afri-Ka Travel']}
 
-📺 *Vivid LED:*
+4️⃣ 📺 *Vivid LED:*
 {CAL_LINKS['Vivid Graphix']}
 
-Reply 1-4 to select service first! 👆
-{HIDE_TEXT}"""
-            save_full(sender, "Wants Meeting - All Links", "", "", "", "", msg, lead_type="HOT - Wants Meeting")
-            send_text(sender, all_links)
+👉 Reply 1-4 to select service first!
+
+👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live!"""
+            save_full(sender, "Wants Meeting - All Links V20.7", "", "", "", "", msg, lead_type="HOT - Wants Meeting"); send_text(sender, all_links)
         else:
-            cal_link = CAL_LINKS.get(service, CAL_LINKS["Kahlel Group"])
-            save_full(sender, service+" - WANTS MEETING", "", "", "", "", msg, lead_type="HOT - Wants Meeting")
-            send_text(sender, f"📅 Let's meet! Book here:\n👉 {cal_link}\nFor {service}\n{HIDE_TEXT if not should_reveal_contact(msg) else REVEAL_TEXT}")
+            cal_link = CAL_LINKS.get(service, CAL_LINKS["Kahlel Group"]); save_full(sender, service+" - WANTS MEETING", "", "", "", "", msg, lead_type="HOT - Wants Meeting"); send_text(sender, f"📅 Let's meet! Book here:\n👉 {cal_link}\nFor {service}\n{HIDE_TEXT if not should_reveal_contact(msg) else REVEAL_TEXT}")
         return jsonify({"status":"sent"}),200
 
     if any(k in low for k in ["reserve ticket","book ticket","booking link"]):
@@ -244,36 +220,26 @@ Reply 1-4 to select service first! 👆
         extracted, smart=groq_reply(msg, SESSION.get(sender)); SESSION[sender]=extracted["service"]; save_full(sender, extracted["service"], "", extracted["date"] or msg, "", "", msg, "Prospect")
         if should_reveal_contact(msg): smart = (smart or "") + f"\n\n{REVEAL_TEXT}"
         send_text(sender, smart or f"Got it! {extracted['service']} {HIDE_TEXT}")
-    
     elif low in ["1","2","3","4"]:
         mapping={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}; sm=mapping[low]; SESSION[sender]=sm; save_full(sender, sm, "", "", "", "", f"Pressed {low}", "Cold - Browsing"); send_image(sender, MENUS_IMAGE[low], MENUS_TEXT[low])
-    
     elif low in ["hello","hi","menu","start","welcome","more info","tell me more","information","info","more information","details","tell me","how much"]:
         SESSION.pop(sender, None); send_text(sender, WELCOME)
-    
     else:
-        # RANDOM TEXT -> MENU
         if SESSION.get(sender):
             _, smart=groq_reply(msg, SESSION.get(sender))
-            if smart and "cleaning" in smart.lower():
-                send_text(sender, WELCOME)
+            if smart and "cleaning" in smart.lower(): send_text(sender, WELCOME)
             else:
-                if should_reveal_contact(msg):
-                    smart = (smart or "") + f"\n\n{REVEAL_TEXT}"
+                if should_reveal_contact(msg): smart = (smart or "") + f"\n\n{REVEAL_TEXT}"
                 else:
-                    if CONTACT_PHONE in (smart or ""):
-                        smart = smart.replace(CONTACT_PHONE, "").replace(CONTACT_EMAIL, "") + f"\n\n{HIDE_TEXT}"
+                    if CONTACT_PHONE in (smart or ""): smart = smart.replace(CONTACT_PHONE, "").replace(CONTACT_EMAIL, "") + f"\n\n{HIDE_TEXT}"
                 send_text(sender, smart or WELCOME)
         else:
-            SESSION.pop(sender, None)
-            save_full(sender, "Random -> Menu V20.6", "", "", "", "", msg, "Cold - Random")
-            send_text(sender, WELCOME)
-
+            SESSION.pop(sender, None); save_full(sender, "Random -> Menu V20.7", "", "", "", "", msg, "Cold - Random"); send_text(sender, WELCOME)
     return jsonify({"status":"sent"}),200
 
 @app.route("/")
-def home(): return f"V20.6 CLEAN WELCOME READY {CONTACT_PHONE}"
+def home(): return f"V20.7 MEETING PREVIEW FIX READY {CONTACT_PHONE}"
 @app.route("/health")
-def health(): return jsonify({"model":MODELS[0],"contact":CONTACT_PHONE,"cal":CAL_LINKS, "version":"V20.6"})
+def health(): return jsonify({"model":MODELS[0],"contact":CONTACT_PHONE,"cal":CAL_LINKS, "version":"V20.7"})
 
 if __name__=="__main__": app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
