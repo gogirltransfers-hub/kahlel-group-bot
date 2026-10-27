@@ -41,13 +41,12 @@ IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 WELCOME = """👉 *Welcome to Kahlel Group!* 👋
 
 We're happy you're here.
-What are you looking for today?
+WELCOME = """👉 *Welcome to Kahlel Group!* 👋
 1️⃣ 🤖 *Kahlel AI* - Robots & AI Agents
 2️⃣ 🎬 *Kahlel Flix* - Movie Under The Stars
 3️⃣ ✈️ *Afri-Ka Travel* - Namibia Holidays
 4️⃣ 📺 *Vivid Graphix* - LED Screens
-Reply 1-4 | Type *MENU* | 👉Type *TALK TO HUMAN* I'll connect you to *Leon* live!
-{HIDE_TEXT}"""
+Reply 1-4 | Type *MENU* | Type *TALK TO HUMAN* for Leon"""
 
 # --- SATURDAY DOUBLE FEATURE - NEW CONVERTING FLOW ---
 FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
