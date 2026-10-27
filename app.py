@@ -66,7 +66,7 @@ Popcorn & Beanbags limited - Reply BOOK to reserve!
 {HIDE_TEXT}
 """
 
-FLIX_SILVER = f"""🥈 *SILVER MEMBERSHIP - Most Popular*
+FLIX_SILVER = f""" *SILVER MEMBERSHIP - Most Popular*
 
 Pay ONLY N$49.50 per movie (50% OFF normal N$99)
 FREE Popcorn every time 🍿
