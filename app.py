@@ -61,12 +61,11 @@ FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
 3️⃣ *Schedule:* {SCHEDULE_LINK}
 
 Popcorn & Beanbags limited - Reply BOOK to reserve!
-👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live! 🍿"""
 
 {HIDE_TEXT}
 """
 
-FLIX_SILVER = f""" *SILVER MEMBERSHIP - Most Popular*
+FLIX_SILVER = f"""🥈 *SILVER MEMBERSHIP - Most Popular*
 
 Pay ONLY N$49.50 per movie (50% OFF normal N$99)
 FREE Popcorn every time 🍿
