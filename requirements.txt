@@ -1,3 +1,5 @@
-flask
-groq
+txt
+Flask
 requests
+gspread
+oauth2client
