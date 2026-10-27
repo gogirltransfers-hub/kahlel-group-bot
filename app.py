@@ -46,7 +46,8 @@ What are you looking for today?
 2️⃣ 🎬 *Kahlel Flix* - Movie Under The Stars
 3️⃣ ✈️ *Afri-Ka Travel* - Namibia Holidays
 4️⃣ 📺 *Vivid Graphix* - LED Screens
-Reply 1-4 | Type *MENU* | 👉Type *TALK TO HUMAN* I'll connect you to *Leon* live!"""
+Reply 1-4 | Type *MENU* | 👉Type *TALK TO HUMAN* I'll connect you to *Leon* live!
+{HIDE_TEXT}"""
 
 # --- SATURDAY DOUBLE FEATURE - NEW CONVERTING FLOW ---
 FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
