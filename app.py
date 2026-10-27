@@ -184,19 +184,37 @@ def webhook():
  if not sender or not msg: return jsonify({"status":"ignored"}),200
  sender="+"+str(sender).strip().lstrip("+"); low=msg.lower().strip(); raw_low = raw.lower()
  log(f"MSG {sender}: {msg} | RAW {raw_low[:600]}")
+  # --- 0. ALWAYS CHECK HUMAN FIRST (works from any menu) ---
+ if should_reveal_contact(msg):
+  save_full(sender, SESSION.get(sender) or "Wants Human", "", "", "", "", msg, "HOT - Wants Human")
+  send_text(sender, REVEAL_TEXT + f"\n\nOr book: {CAL_LINKS.get(SESSION.get(sender), CAL_LINKS['Kahlel Group'])}")
+  return jsonify({"status":"human_revealed"}),200
+
  is_fb_ad_click = ("can i get more info on this" in low or "fb.me" in raw_low or "skip long drives" in raw_low or "explore namibia by air" in raw_low or "afri-ka tours & travel" in raw_low or "afri-katours.com" in raw_low)
  if is_fb_ad_click:
   SESSION.pop(sender, None); save_full(sender, "Facebook Ad Click - AfriKa", "", "", "", "", msg, "Facebook Ad Lead"); send_text(sender, WELCOME); return jsonify({"status":"fb_menu_sent"}),200
 
- # --- FLIX FUNNEL LOGIC ---
- if SESSION.get(sender) == "Kahlel Flix" and low in ["1", "silver"]:
+ # --- 1. MAIN MENU 1-4 ALWAYS WINS ---
+ # clean numbers like "1.", "1️⃣", "1 - AI" -> extract first digit
+ m_num = re.match(r'^\D*([1-4])\D*', low)
+ if m_num and len(low) < 10: # if message is basically just "1" or "1."
+  num = m_num.group(1)
+  mapping={"1":"Kahlel AI","2":"Kahlel Flix","3":"GoGirl Afri-Ka Travel","4":"Vivid Graphix"}
+  sm=mapping[num]
+  SESSION[sender]=sm
+  save_full(sender, sm, "", "", "", "", f"Pressed {num}", "Cold - Browsing")
+  send_image(sender, MENUS_IMAGE[num], MENUS_TEXT[num])
+  return jsonify({"status":"menu_sent"}),200
+
+ # --- 2. FLIX INTERNAL: only words, NOT numbers ---
+ if SESSION.get(sender) == "Kahlel Flix" and "silver" in low:
   save_full(sender, "Kahlel Flix - Wants Silver", "", "", "", "", msg, "HOT - Wants Membership"); send_text(sender, FLIX_SILVER); return jsonify({"status":"silver_sent"}),200
- if SESSION.get(sender) == "Kahlel Flix" and low in ["2", "vip"]:
+ if SESSION.get(sender) == "Kahlel Flix" and "vip" in low:
   save_full(sender, "Kahlel Flix - Wants VIP", "", "", "", "", msg, "HOT - Wants Membership"); send_text(sender, FLIX_VIP); return jsonify({"status":"vip_sent"}),200
 
- if low == "2" or any(k in low for k in FLIX_DETAILED_TRIGGERS):
-  if low == "2" or any(k in low for k in ["movie","flix","cinema","silver","vip","membership","popcorn","discount","price","cost","show","member","75%"]):
-   SESSION[sender]="Kahlel Flix"; save_full(sender, "Kahlel Flix - Clean V20.8", "", "", "", "", msg, "HOT - Flix"); send_image(sender, IMAGE_FLIX, FLIX_CLEAN); return jsonify({"status":"flix_clean_sent"}),200
+ # --- 3. FLIX TRIGGER (no longer catch "2" alone) ---
+ if any(k in low for k in FLIX_DETAILED_TRIGGERS):
+  SESSION[sender]="Kahlel Flix"; save_full(sender, "Kahlel Flix - Clean V20.8", "", "", "", "", msg, "HOT - Flix"); send_image(sender, IMAGE_FLIX, FLIX_CLEAN); return jsonify({"status":"flix_clean_sent"}),200
 
  if any(k in low for k in ["book meeting","appointment","book a meeting","book call","cal.com","consultation","meeting","schedule call","meet you","speak to leon"]):
   service = SESSION.get(sender, None)
