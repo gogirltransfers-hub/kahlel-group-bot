@@ -19,8 +19,8 @@ def clean_whatsapp_text(t):
     t = re.sub(r'\((https://[^\)]+)\)', r'\n\1', t)
     t = re.sub(r'\|---.*', '', t)
     return t.strip()
-HIDE_TEXT = "👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live!"
-REVEAL_TEXT = f"📞 Leon: {CONTACT_PHONE} / {CONTACT_EMAIL}"
+HIDE_TEXT = "👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live! 🍿"
+REVEAL_TEXT = f"📞 Call Leon now: *0812086309* (clickable)"
 RESERVE_LINK = "https://www.nam-events.com/explore/movie-magic-under-the-stars"
 MEMBERSHIP_LINK = "https://kahlelflix.com/p/1065605/kahlel-flix-membership"
 SCHEDULE_LINK = "https://kahlelflix.com/cp/38494/movie-schedule"
