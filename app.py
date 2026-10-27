@@ -50,7 +50,9 @@ What are you looking for today?
 
 👉 Reply with _1, 2, 3 or 4_
 Type _MENU_ to see this again
-Type _TALK TO HUMAN_ to chat with *Leon* directly"""
+
+{HIDE_TEXT}
+"""
 
 # --- SATURDAY DOUBLE FEATURE - NEW CONVERTING FLOW ---
 FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
