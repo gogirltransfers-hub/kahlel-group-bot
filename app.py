@@ -38,21 +38,18 @@ IMAGE_FLIX = "https://www.kahlelflix.com/photos/Drive.png?469"
 IMAGE_TRAVEL = "https://a.kwikweb.co.za/afrikatourstr/otherImages/images1.jpg"
 IMAGE_LED = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600"
 
-WELCOME = """_Welcome to Kahlel Group!_ 👋
+WELCOME = """_*Welcome to Kahlel Group!*_ 👋
+
 We're happy you're here.
 
 What are you looking for today?
-
-1️⃣ 🤖 _Kahlel AI_ — Robots & AI Agents
-2️⃣ 🎬 _KahlelFlix_ — Movie Under The Stars
-3️⃣ ✈️ _Afri-Ka Travel_ — Namibia Holidays
-4️⃣ 📺 _Vivid Graphix_ — LED Screens for Hire
-
+1️⃣ 🤖 _Kahlel AI_ — *Robots & AI Agents*
+2️⃣ 🎬 _Kahlel Flix_ — *Movie Under The Stars*
+3️⃣ ✈️ _Afri-Ka Travel_ — *Namibia Holidays*
+4️⃣ 📺 _Vivid Graphix_ — *LED Screens for Hire*
 👉 Reply with _1, 2, 3 or 4_
 Type _MENU_ to see this again
-
-{HIDE_TEXT}
-"""
+👉 Type *Talk to Human* and I'll connect you to *Leon*"""
 
 # --- SATURDAY DOUBLE FEATURE - NEW CONVERTING FLOW ---
 FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
