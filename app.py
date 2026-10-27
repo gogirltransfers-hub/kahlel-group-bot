@@ -34,7 +34,7 @@ def webhook():
             "to": phone,
             "type": "text",
             "text": {
-                "body": "🎬 *Saturday Double Feature!*\n1. The Lion King\n2. Notebook\n\n*VIP Members*: N$24.75 only!\nReply:\n- BOOK (tickets)\n- VIP (membership)"
+                "body": "👉 🎬 *Saturday Double Feature!*\n1. The Lion King\n2. Notebook\n\n*VIP Members*: N$24.75 only!\nReply:\n- BOOK (tickets)\n- VIP (membership)"
             }
         }
     elif text == 'book':
