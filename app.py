@@ -61,6 +61,7 @@ FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
 3️⃣ *Schedule:* {SCHEDULE_LINK}
 
 Popcorn & Beanbags limited - Reply BOOK to reserve!
+👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live! 🍿"""
 
 {HIDE_TEXT}
 """
