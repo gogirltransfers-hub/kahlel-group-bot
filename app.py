@@ -21,7 +21,7 @@ def clean_whatsapp_text(t):
     return t.strip()
 HIDE_TEXT = "👉 Want to Talk to Live Agent? Just TYPE *Talk to Human* and I'll connect you to Leon live! 🍿"
 REVEAL_TEXT = f"💬 Chat with Leon now: *0812086309* (tap number to start chat)\n📞 Or call: 0812086309"
-RESERVE_LINK = "https://www.nam-events.com/explore/movie-magic-under-the-stars"
+RESERVE_LINK = "https://www.nam-events.com/explore/movie-rugby"
 MEMBERSHIP_LINK = "https://kahlelflix.com/p/1065605/kahlel-flix-membership"
 SCHEDULE_LINK = "https://kahlelflix.com/cp/38494/movie-schedule"
 CAL_LINKS = {
@@ -54,21 +54,28 @@ We're happy you're here.
 4️⃣ 📺 *Vivid Graphix* - LED Screens
 Reply 1-4 | Type *MENU* | Type *TALK TO HUMAN* for Leon"""
 
-FLIX_CLEAN = f"""🎬 *SATURDAY DOUBLE - The Lion King + The Notebook* ✨
+FLIX_CLEAN = f"""🎬🏉 *WANDERERS - Movie + FREE Rugby!* 🏉🎬
 
-💰 *NORMAL:* N$99 for BOTH movies!
+*Friday 13 November | Wanderers*
 
-💎 *MEMBERSHIP - SAVE EVERY WEEKEND:*
-🥈 *Silver* - N$49.50 only (50% OFF) + FREE Popcorn 🍿
-👑 *VIP* - N$24.75 only (75% OFF) + FREE Popcorn + FREE Water + Best Beanbags
+✨ *THE LEGO MOVIE* - fun for the whole family!
+🏉 *Springboks vs France - LIVE* on our giant inflatable screen!
 
-*This Saturday you save N$74.25 with VIP!*
+*You only pay for the movie!*
+🎟️ Movie Ticket: *N$55*
+🏉 Rugby: *FREE* with your movie ticket!
 
-1️⃣ *Become Member:* {MEMBERSHIP_LINK}
-2️⃣ *Book Ticket (N$99 or N$24.75 if VIP):* {RESERVE_LINK}
-3️⃣ *Schedule:* {SCHEDULE_LINK}
+*The Night:*
+🚪 Gates Open: 18h00
+🎬 Movie Starts: 19h30
+🏉 Rugby Kick-off: 22h10
 
-Popcorn & Beanbags limited - Reply BOOK to reserve!
+🍿 Popcorn, Food Stalls & Wanderers Bar for drinks & ice-cold beer
+
+1️⃣ *Book Ticket (N$55):* {RESERVE_LINK}
+2️⃣ *Schedule:* {SCHEDULE_LINK}
+
+Bring your blanket & the whole family!
 
 {HIDE_TEXT}
 """
@@ -83,7 +90,7 @@ MENUS_IMAGE = {"1": IMAGE_AI, "2": IMAGE_FLIX, "3": IMAGE_TRAVEL, "4": IMAGE_LED
 BANNED = "CRITICAL: NEVER mention cleaning services. ONLY 4 services: 1) Kahlel AI 2) Kahlel Flix 3) Afri-Ka Travel 4) Vivid Graphix LED."
 PROMPTS = {
  "Kahlel AI": f"{BANNED} You are Kahlel AI ONLY. Meeting {CAL_LINKS['Kahlel AI']}. Default {HIDE_TEXT}.",
- "Kahlel Flix": f"{BANNED} You are Kahlel Flix ONLY. Silver N$49.50 VIP N$24.75. Membership {MEMBERSHIP_LINK} Booking {RESERVE_LINK}. Default {HIDE_TEXT}.",
+ "Kahlel Flix": f"{BANNED} You are Kahlel Flix ONLY. Current event is Wanderers Friday 13 November: The Lego Movie 19h30 + Springboks vs France Rugby 22h10 LIVE. Price is N$55 for movie, Rugby is FREE with movie ticket. Do NOT mention Lion King, Notebook, or N$99. Booking {RESERVE_LINK}. Default {HIDE_TEXT}.",
  "GoGirl Afri-Ka Travel": f"{BANNED} You are GoGirl Afri-Ka Travel ONLY. Cal {CAL_LINKS['GoGirl Afri-Ka Travel']}. Default {HIDE_TEXT}.",
  "Vivid Graphix": f"{BANNED} You are Vivid Graphix LED ONLY. Cal {CAL_LINKS['Vivid Graphix']}. Default {HIDE_TEXT}.",
  "Kahlel Group": f"{BANNED} You are Kahlel Group helper. ONLY show menu: 1 AI 2 Flix 3 Travel 4 LED. Default {HIDE_TEXT}."
@@ -129,7 +136,7 @@ def send_image(to, image_url, caption):
  except Exception as e:
   log(f"IMAGE FAIL {e}"); send_text(to, caption)
 
-FLIX_DETAILED_TRIGGERS = ["movie", "flix", "cinema", "silver", "vip", "membership", "popcorn", "discount", "price", "cost", "ticket", "show", "film"]
+FLIX_DETAILED_TRIGGERS = ["movie", "flix", "cinema", "silver", "vip", "membership", "popcorn", "discount", "price", "cost", "ticket", "show", "film", "rugby", "springboks", "france", "wanderers", "lego"]
 
 @app.route("/webhook", methods=["POST","GET"])
 def webhook():
